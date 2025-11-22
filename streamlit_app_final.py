@@ -7,8 +7,8 @@ import streamlit as st
 # -----------------------------
 # Page Config
 # -----------------------------
-st.set_page_config(page_title="RiskIQ Dashboard", layout="wide")
-st.title("RiskIQ Interactive Dashboard")
+st.set_page_config(page_title="Global RiskIQ Hub", layout="wide")
+st.title("Global RiskIQ Hub")
 
 # -----------------------------
 # Load and Prepare Data

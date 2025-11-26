@@ -101,8 +101,6 @@ if reset_conversion:
 
 # Apply filters
 filtered = all_df[(all_df['country'].isin(selected_countries)) & (all_df['event_date'].dt.date >= date_range[0]) & (all_df['event_date'].dt.date <= date_range[1])]
-if dealer_filter:
-    filtered = filtered[filtered['dealerbpid'].isin(dealer_filter)]
 if cust_filter:
     filtered = filtered[filtered['legalentitycode'].isin(cust_filter)]
 if model_filter:

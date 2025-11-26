@@ -117,6 +117,71 @@ if model_search:
 # Tabs
 # -----------------------------
 tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Dealer Analysis","Seasonal","Export","Financial Revenue Analysis","Car Model Analysis"])
+# Multi-Country Trends
+with tabs[0]:
+    st.subheader("Monthly Delinquency Rate by Country")
+    monthly = filtered.groupby(['country','month']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
+    monthly['rate_pct'] = (monthly['delinq']/monthly['total']*100).round(2)
+    monthly['month_dt'] = pd.to_datetime(monthly['month']+'-01')
+    fig_month = px.line(monthly, x='month_dt', y='rate_pct', color='country', markers=True, title='Monthly Delinquency Rate')
+    st.plotly_chart(fig_month, use_container_width=True)
+
+    st.subheader("Quarterly Delinquency Rate by Country")
+    quarterly = filtered.groupby(['country','quarter']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
+    quarterly['rate_pct'] = (quarterly['delinq']/quarterly['total']*100).round(2)
+    quarterly['q_dt'] = pd.PeriodIndex(quarterly['quarter'], freq='Q').to_timestamp()
+    fig_quarter = px.line(quarterly, x='q_dt', y='rate_pct', color='country', markers=True, title='Quarterly Delinquency Rate')
+    st.plotly_chart(fig_quarter, use_container_width=True)
+
+# Variance Tab
+with tabs[1]:
+    st.subheader("MoM Variance")
+    if not monthly.empty:
+        monthly_sorted = monthly.sort_values(['country','month_dt'])
+        monthly_sorted['mom_var'] = monthly_sorted.groupby('country')['rate_pct'].pct_change()*100
+        fig_mom = px.bar(monthly_sorted, x='month_dt', y='mom_var', color='country', title='MoM Variance (%)')
+        st.plotly_chart(fig_mom, use_container_width=True)
+
+    st.subheader("QoQ Variance")
+    if not quarterly.empty:
+        quarterly_sorted = quarterly.sort_values(['country','q_dt'])
+        quarterly_sorted['qoq_var'] = quarterly_sorted.groupby('country')['rate_pct'].pct_change()*100
+        fig_qoq = px.bar(quarterly_sorted, x='q_dt', y='qoq_var', color='country', title='QoQ Variance (%)')
+        st.plotly_chart(fig_qoq, use_container_width=True)
+
+# Fiscal Analysis Tab
+with tabs[2]:
+    st.subheader("Fiscal Q4 vs Q1 Comparison")
+    q4q1 = filtered[filtered['q_num'].isin([1,4])].groupby(['country','year','q_num']).agg(rate=('is_delinquent','mean')).reset_index()
+    q4q1['rate'] = q4q1['rate']*100
+    pivot_q4q1 = q4q1.pivot_table(index=['country','year'], columns='q_num', values='rate').reset_index()
+    fig_q4q1 = go.Figure()
+    for country in selected_countries:
+        d = pivot_q4q1[pivot_q4q1['country']==country]
+        fig_q4q1.add_trace(go.Scatter(x=d['year'], y=d.get(4,[]), mode='lines+markers', name=f'{country} Q4'))
+        fig_q4q1.add_trace(go.Scatter(x=d['year'], y=d.get(1,[]), mode='lines+markers', name=f'{country} Q1'))
+    fig_q4q1.update_layout(title='Fiscal Q4 vs Q1 Comparison')
+    st.plotly_chart(fig_q4q1, use_container_width=True)
+
+# Dealer Analysis Tab
+with tabs[3]:
+    st.subheader("Dealer-Level Analysis")
+    dealer_data = filtered.groupby(['dealerbpid','country']).agg(rate=('is_delinquent','mean')).reset_index()
+    dealer_data['rate'] = dealer_data['rate']*100
+    fig_dealer = px.bar(dealer_data, x='dealerbpid', y='rate', color='country', title='Dealer-Level Delinquency Rate')
+    st.plotly_chart(fig_dealer, use_container_width=True)
+
+# Seasonal Tab
+with tabs[4]:
+    st.subheader("Seasonal Trend by Month")
+    seasonal = filtered.groupby([filtered['event_date'].dt.month_name(),'country']).agg(rate=('is_delinquent','mean')).reset_index()
+    seasonal['rate'] = seasonal['rate']*100
+    fig_seasonal = px.bar(seasonal, x='event_date', y='rate', color='country', title='Seasonal Trend')
+    st.plotly_chart(fig_seasonal, use_container_width=True)
+
+# Export Tab
+with tabs[5]:
+    st.write("Report export functionality can be added here (Word/PDF generation).")
 
 # -----------------------------
 # Financial Revenue Analysis Tab

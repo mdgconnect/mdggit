@@ -7,8 +7,8 @@ import streamlit as st
 # -----------------------------
 # Page Config
 # -----------------------------
-st.set_page_config(page_title="Desudo Final Dashboard", layout="wide")
-st.title("Desudo Portfolio – Final Interactive Dashboard")
+st.set_page_config(page_title="AutoCred Global", layout="wide")
+st.title("AutoCred Global Dashboard")
 
 # -----------------------------
 # Load and Prepare Data

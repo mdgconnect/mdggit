@@ -61,14 +61,13 @@ all_df = all_df[mask]
 # -----------------------------
 st.sidebar.header("Filters")
 selected_countries = st.sidebar.multiselect("Select Countries", options=sorted(all_df['country'].unique()), default=sorted(all_df['country'].unique()))
-dealer_filter = st.sidebar.multiselect("Dealer(s)", options=sorted(all_df['dealerbpid'].dropna().unique()), default=[])
-cust_filter = st.sidebar.multiselect("Customer Type(s)", options=sorted(all_df['legalentitycode'].dropna().unique()), default=[])
+cust_filter = st.sidebar.multiselect("Customer Type", options=sorted(all_df['legalentitycode'].dropna().unique()), default=[])
 date_range = st.sidebar.date_input("Date Range", value=(all_df['event_date'].min().date(), all_df['event_date'].max().date()))
 
 # Advanced filters
-model_filter = st.sidebar.multiselect("Model Description(s)", options=sorted(all_df['modeldescription'].dropna().unique()), default=[], key="model_filter")
-fuel_filter = st.sidebar.multiselect("Fuel Type(s)", options=sorted(all_df['fueltypecode'].dropna().unique()), default=[], key="fuel_filter")
-model_search = st.sidebar.text_input("Search Model (partial match)", value="", key="model_search")
+model_filter = st.sidebar.multiselect("Vehicle Model", options=sorted(all_df['modeldescription'].dropna().unique()), default=[], key="model_filter")
+fuel_filter = st.sidebar.multiselect("Fuel Type", options=sorted(all_df['fueltypecode'].dropna().unique()), default=[], key="fuel_filter")
+model_search = st.sidebar.text_input("Search Model", value="", key="model_search")
 
 # Global revenue basis
 st.sidebar.subheader("Revenue Basis")

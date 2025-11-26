@@ -7,8 +7,8 @@ import streamlit as st
 # -----------------------------
 # Page Config
 # -----------------------------
-st.set_page_config(page_title="Desudo Final Dashboard", layout="wide")
-st.title("Desudo Portfolio – Final Interactive Dashboard")
+st.set_page_config(page_title="Global RiskIQ Dashboard", layout="wide")
+st.title("Global RiskIQ Dashboard")
 
 # -----------------------------
 # Load and Prepare Data

@@ -7,8 +7,8 @@ import streamlit as st
 # -----------------------------
 # Page Config
 # -----------------------------
-st.set_page_config(page_title="Global RiskIQ Dashboard", layout="wide")
-st.title("Global RiskIQ Dashboard")
+st.set_page_config(page_title="AutoCred Global", layout="wide")
+st.title("AutoCred Global Dashboard")
 
 # -----------------------------
 # Load and Prepare Data
@@ -65,12 +65,60 @@ dealer_filter = st.sidebar.multiselect("Dealer(s)", options=sorted(all_df['deale
 cust_filter = st.sidebar.multiselect("Customer Type(s)", options=sorted(all_df['legalentitycode'].dropna().unique()), default=[])
 date_range = st.sidebar.date_input("Date Range", value=(all_df['event_date'].min().date(), all_df['event_date'].max().date()))
 
+# Advanced filters
+model_filter = st.sidebar.multiselect("Model Description(s)", options=sorted(all_df['modeldescription'].dropna().unique()), default=[], key="model_filter")
+fuel_filter = st.sidebar.multiselect("Fuel Type(s)", options=sorted(all_df['fueltypecode'].dropna().unique()), default=[], key="fuel_filter")
+model_search = st.sidebar.text_input("Search Model (partial match)", value="", key="model_search")
+
+# Global revenue basis
+st.sidebar.subheader("Revenue Basis")
+rev_basis = st.sidebar.radio("Revenue Basis", ["Capital Only","Capital+Interest+Fees+Other","NetbookValue"], index=1, key="rev_basis")
+
+# Currency symbol toggle
+currency_symbol = st.sidebar.selectbox('Currency Symbol', options=['€','₹','$','None'], index=0, key='currency_symbol')
+
+# Currency conversion
+st.sidebar.subheader('Currency Conversion')
+conversion_option = st.sidebar.selectbox('Convert To', options=['EUR','INR','USD'], index=0, key='conversion_option')
+conversion_rates = {'EUR':1.0,'INR':90.0,'USD':1.1}
+conversion_rate = conversion_rates.get(conversion_option,1.0)
+st.sidebar.caption(f"Applied rate: 1 EUR = {conversion_rate:.2f} {conversion_option}")
+
+# Reset buttons
+reset_filters = st.sidebar.button("Reset Filters")
+reset_conversion = st.sidebar.button("Reset Conversion")
+
+if reset_filters:
+    for k in ['selected_countries','dealer_filter','cust_filter','model_filter','fuel_filter','model_search','date_range','rev_basis','conversion_option','currency_symbol','fuel_trend_view']:
+        if k in st.session_state:
+            del st.session_state[k]
+    st.rerun()
+
+if reset_conversion:
+    for k in ['conversion_option']:
+        if k in st.session_state:
+            del st.session_state[k]
+    st.rerun()
+
+# Apply filters
 filtered = all_df[(all_df['country'].isin(selected_countries)) & (all_df['event_date'].dt.date >= date_range[0]) & (all_df['event_date'].dt.date <= date_range[1])]
 if dealer_filter:
     filtered = filtered[filtered['dealerbpid'].isin(dealer_filter)]
 if cust_filter:
     filtered = filtered[filtered['legalentitycode'].isin(cust_filter)]
+if model_filter:
+    filtered = filtered[filtered['modeldescription'].isin(model_filter)]
+if fuel_filter:
+    filtered = filtered[filtered['fueltypecode'].isin(fuel_filter)]
+if model_search:
+    filtered = filtered[filtered['modeldescription'].str.contains(model_search.strip(), case=False, na=False)]
 
+# -----------------------------
+
+# Error handling for empty data
+if filtered.empty:
+    st.warning('No data available for selected filters.')
+else:
 # Tabs
 # -----------------------------
 tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Dealer Analysis","Seasonal","Financial Revenue Analysis","Car Model Analysis"])

@@ -113,12 +113,6 @@ if fuel_filter:
 if model_search:
     filtered = filtered[filtered['modeldescription'].str.contains(model_search.strip(), case=False, na=False)]
 
-# -----------------------------
-
-# Error handling for empty data
-if filtered.empty:
-    st.warning('No data available for selected filters.')
-else:
 # Tabs
 # -----------------------------
 tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Dealer Analysis","Seasonal","Financial Revenue Analysis","Car Model Analysis"])

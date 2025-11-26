@@ -116,7 +116,7 @@ if model_search:
 # -----------------------------
 # Tabs
 # -----------------------------
-tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Dealer Analysis","Seasonal","Export","Financial Revenue Analysis","Car Model Analysis"])
+tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Dealer Analysis","Seasonal","Financial Revenue Analysis","Car Model Analysis"])
 # Multi-Country Trends
 with tabs[0]:
     st.subheader("Monthly Delinquency Rate by Country")
@@ -179,14 +179,10 @@ with tabs[4]:
     fig_seasonal = px.bar(seasonal, x='event_date', y='rate', color='country', title='Seasonal Trend')
     st.plotly_chart(fig_seasonal, use_container_width=True)
 
-# Export Tab
-with tabs[5]:
-    st.write("Report export functionality can be added here (Word/PDF generation).")
-
 # -----------------------------
 # Financial Revenue Analysis Tab
 # -----------------------------
-with tabs[6]:
+with tabs[5]:
     st.subheader("Financial Revenue Analysis")
     basis_option = st.session_state.get("rev_basis", "Capital+Interest+Fees+Other")
     if basis_option == "Capital Only":
@@ -270,7 +266,7 @@ with tabs[6]:
 # -----------------------------
 # Car Model Analysis Tab
 # -----------------------------
-with tabs[7]:
+with tabs[6]:
     st.subheader("Car Model Analysis by Fuel Type")
     basis_option = st.session_state.get("rev_basis", "Capital+Interest+Fees+Other")
     if basis_option == "Capital Only":

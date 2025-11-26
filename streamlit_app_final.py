@@ -89,7 +89,7 @@ reset_filters = st.sidebar.button("Reset Filters")
 reset_conversion = st.sidebar.button("Reset Conversion")
 
 if reset_filters:
-    for k in ['selected_countries','dealer_filter','cust_filter','model_filter','fuel_filter','model_search','date_range','rev_basis','conversion_option']:
+    for k in ['selected_countries','dealer_filter','cust_filter','model_filter','fuel_filter','model_search','date_range','rev_basis','conversion_option','currency_symbol','fuel_trend_view']:
         if k in st.session_state:
             del st.session_state[k]
     st.rerun()
@@ -114,6 +114,11 @@ if model_search:
     filtered = filtered[filtered['modeldescription'].str.contains(model_search.strip(), case=False, na=False)]
 
 # -----------------------------
+
+# Error handling for empty data
+if filtered.empty:
+    st.warning('No data available for selected filters.')
+else:
 # Tabs
 # -----------------------------
 tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Dealer Analysis","Seasonal","Financial Revenue Analysis","Car Model Analysis"])
@@ -174,9 +179,10 @@ with tabs[3]:
 # Seasonal Tab
 with tabs[4]:
     st.subheader("Seasonal Trend by Month")
-    seasonal = filtered.groupby([filtered['event_date'].dt.month_name(),'country']).agg(rate=('is_delinquent','mean')).reset_index()
+    filtered['month_name'] = filtered['event_date'].dt.month_name()
+seasonal = filtered.groupby(['month_name','country']).agg(rate=('is_delinquent','mean')).reset_index(),'country']).agg(rate=('is_delinquent','mean')).reset_index()
     seasonal['rate'] = seasonal['rate']*100
-    fig_seasonal = px.bar(seasonal, x='event_date', y='rate', color='country', title='Seasonal Trend')
+    fig_seasonal = px.bar(seasonal, x='month_name', y='rate', color='country', title='Seasonal Trend')
     st.plotly_chart(fig_seasonal, use_container_width=True)
 
 
@@ -213,14 +219,14 @@ with tabs[5]:
     # Charts
     rev_country = filtered.groupby('country').agg(total_revenue=('revenue_amount','sum')).reset_index()
     fig_rev_country = px.bar(rev_country, x='country', y='total_revenue', title='Revenue by Country')
-    fig_rev_country.update_traces(hovertemplate=currency_symbol + ' %{y:,.2f}')
+    fig_rev_country.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_rev_country.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_rev_country, use_container_width=True)
 
     rev_time = filtered.groupby('month').agg(total_revenue=('revenue_amount','sum')).reset_index()
     rev_time['month_dt'] = pd.to_datetime(rev_time['month']+'-01')
     fig_rev_time = px.line(rev_time, x='month_dt', y='total_revenue', markers=True, title='Monthly Revenue Trend')
-    fig_rev_time.update_traces(hovertemplate=currency_symbol + ' %{y:,.2f}')
+    fig_rev_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_rev_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_rev_time, use_container_width=True)
 
@@ -235,7 +241,7 @@ with tabs[5]:
         fig_fuel_time = px.line(fuel_time, x='month_dt', y='total_revenue', color='fueltypecode', markers=True, title='Monthly Revenue by Fuel Type')
     else:
         fig_fuel_time = px.area(fuel_time, x='month_dt', y='total_revenue', color='fueltypecode', title='Monthly Revenue by Fuel Type (Stacked)')
-    fig_fuel_time.update_traces(hovertemplate=currency_symbol + ' %{y:,.2f}')
+    fig_fuel_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_time, use_container_width=True)
 
@@ -243,7 +249,7 @@ with tabs[5]:
     st.markdown("### Revenue Trend by Country (Monthly)")
     rev_country_time = filtered.groupby(['month_dt','country']).agg(total_revenue=('revenue_amount','sum')).reset_index()
     fig_country_time = px.line(rev_country_time, x='month_dt', y='total_revenue', color='country', markers=True, title='Monthly Revenue by Country')
-    fig_country_time.update_traces(hovertemplate=currency_symbol + ' %{y:,.2f}')
+    fig_country_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_country_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_country_time, use_container_width=True)
 
@@ -253,12 +259,12 @@ with tabs[5]:
     fuel_comp['total_revenue'] *= 1
     fuel_comp['avg_rev_contract'] *= 1
     fig_fuel_comp = px.bar(fuel_comp, x='fueltypecode', y='total_revenue', color='fueltypecode', title='Total Revenue by Fuel Type')
-    fig_fuel_comp.update_traces(hovertemplate=currency_symbol + ' %{y:,.2f}')
+    fig_fuel_comp.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_comp.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_comp, use_container_width=True)
 
     fig_fuel_avg = px.bar(fuel_comp, x='fueltypecode', y='avg_rev_contract', color='fueltypecode', title='Average Revenue per Contract by Fuel Type')
-    fig_fuel_avg.update_traces(hovertemplate=currency_symbol + ' %{y:,.2f}')
+    fig_fuel_avg.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_avg.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_avg, use_container_width=True)
 
@@ -289,7 +295,7 @@ with tabs[6]:
     top_by_fuel = model_fuel_rev.sort_values(['fueltypecode','revenue'], ascending=[True, False]).groupby('fueltypecode').head(top_n)
     fig_top_by_fuel = px.bar(top_by_fuel, x='modeldescription', y='revenue', color='fueltypecode', title=f'Top {top_n} Models by Revenue within Each Fuel Type')
     fig_top_by_fuel.update_xaxes(tickangle=45)
-    fig_top_by_fuel.update_traces(hovertemplate=currency_symbol + ' %{y:,.2f}')
+    fig_top_by_fuel.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_top_by_fuel.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_top_by_fuel, use_container_width=True)
 

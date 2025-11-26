@@ -366,4 +366,3 @@ with tabs[4]:
 # Export Tab
 with tabs[5]:
     st.write("Report export functionality can be added here (Word/PDF generation).")
-

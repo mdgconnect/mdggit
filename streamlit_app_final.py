@@ -71,11 +71,9 @@ if dealer_filter:
 if cust_filter:
     filtered = filtered[filtered['legalentitycode'].isin(cust_filter)]
 
-# -----------------------------
 # Tabs
 # -----------------------------
-tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Dealer Analysis","Seasonal","Export"])
-
+tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Dealer Analysis","Seasonal","Financial Revenue Analysis","Car Model Analysis"])
 # Multi-Country Trends
 with tabs[0]:
     st.subheader("Monthly Delinquency Rate by Country")
@@ -133,12 +131,125 @@ with tabs[3]:
 # Seasonal Tab
 with tabs[4]:
     st.subheader("Seasonal Trend by Month")
-    seasonal = filtered.groupby([filtered['event_date'].dt.month_name(),'country']).agg(rate=('is_delinquent','mean')).reset_index()
+    filtered['month_name'] = filtered['event_date'].dt.month_name()
+seasonal = filtered.groupby(['month_name','country']).agg(rate=('is_delinquent','mean')).reset_index(),'country']).agg(rate=('is_delinquent','mean')).reset_index()
     seasonal['rate'] = seasonal['rate']*100
-    fig_seasonal = px.bar(seasonal, x='event_date', y='rate', color='country', title='Seasonal Trend')
+    fig_seasonal = px.bar(seasonal, x='month_name', y='rate', color='country', title='Seasonal Trend')
     st.plotly_chart(fig_seasonal, use_container_width=True)
 
-# Export Tab
-with tabs[5]:
-    st.write("Report export functionality can be added here (Word/PDF generation).")
 
+# -----------------------------
+# Financial Revenue Analysis Tab
+# -----------------------------
+with tabs[5]:
+    st.subheader("Financial Revenue Analysis")
+    basis_option = st.session_state.get("rev_basis", "Capital+Interest+Fees+Other")
+    if basis_option == "Capital Only":
+        filtered['revenue_amount'] = pd.to_numeric(filtered['totalcapitalamount'].astype(str).str.replace(',','').str.strip(), errors='coerce')
+    elif basis_option == "Capital+Interest+Fees+Other":
+        cols = ['totalcapitalamount','totalinterestamount','totalfeeamount','totalotheramount']
+        for c in cols:
+            if c not in filtered.columns:
+                filtered[c] = 0
+        filtered['revenue_amount'] = filtered[cols].apply(lambda x: pd.to_numeric(x.astype(str).str.replace(',','').str.strip(), errors='coerce')).sum(axis=1)
+    else:
+        filtered['revenue_amount'] = pd.to_numeric(filtered['netbookvalue'].astype(str).str.replace(',','').str.strip(), errors='coerce')
+
+    # Apply conversion
+    filtered['revenue_amount'] *= conversion_rate
+
+    # KPIs
+    total_revenue = filtered['revenue_amount'].sum()
+    avg_rev_contract = filtered['revenue_amount'].mean()
+    total_contracts = filtered['contractnumber'].count()
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Total Revenue", f"{currency_symbol} {total_revenue:,.2f}")
+    c2.metric("Average Revenue per Contract", f"{currency_symbol} {avg_rev_contract:,.2f}")
+    c3.metric("Contracts", f"{total_contracts:,}")
+    st.caption(f"Applied conversion: 1 EUR = {conversion_rate:.2f} {conversion_option}")
+
+    # Charts
+    rev_country = filtered.groupby('country').agg(total_revenue=('revenue_amount','sum')).reset_index()
+    fig_rev_country = px.bar(rev_country, x='country', y='total_revenue', title='Revenue by Country')
+    fig_rev_country.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
+    fig_rev_country.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
+    st.plotly_chart(fig_rev_country, use_container_width=True)
+
+    rev_time = filtered.groupby('month').agg(total_revenue=('revenue_amount','sum')).reset_index()
+    rev_time['month_dt'] = pd.to_datetime(rev_time['month']+'-01')
+    fig_rev_time = px.line(rev_time, x='month_dt', y='total_revenue', markers=True, title='Monthly Revenue Trend')
+    fig_rev_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
+    fig_rev_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
+    st.plotly_chart(fig_rev_time, use_container_width=True)
+
+    # Revenue trend by fuel type
+    st.markdown("### Revenue Trend by Fuel Type (Monthly)")
+    if 'month_dt' not in filtered.columns:
+        filtered['month_dt'] = pd.to_datetime(filtered['month']+'-01')
+    fuel_time = filtered.groupby(['month_dt','fueltypecode']).agg(total_revenue=('revenue_amount','sum')).reset_index()
+    fuel_time['total_revenue'] *= 1
+    view_mode = st.radio("Fuel Trend View", ["Multi-line","Stacked area"], index=0, horizontal=True, key="fuel_trend_view")
+    if view_mode == "Multi-line":
+        fig_fuel_time = px.line(fuel_time, x='month_dt', y='total_revenue', color='fueltypecode', markers=True, title='Monthly Revenue by Fuel Type')
+    else:
+        fig_fuel_time = px.area(fuel_time, x='month_dt', y='total_revenue', color='fueltypecode', title='Monthly Revenue by Fuel Type (Stacked)')
+    fig_fuel_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
+    fig_fuel_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
+    st.plotly_chart(fig_fuel_time, use_container_width=True)
+
+    # Revenue trend by country
+    st.markdown("### Revenue Trend by Country (Monthly)")
+    rev_country_time = filtered.groupby(['month_dt','country']).agg(total_revenue=('revenue_amount','sum')).reset_index()
+    fig_country_time = px.line(rev_country_time, x='month_dt', y='total_revenue', color='country', markers=True, title='Monthly Revenue by Country')
+    fig_country_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
+    fig_country_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
+    st.plotly_chart(fig_country_time, use_container_width=True)
+
+    # Fuel type comparison
+    st.markdown("### Fuel Type Comparison")
+    fuel_comp = filtered.groupby('fueltypecode').agg(total_revenue=('revenue_amount','sum'), avg_rev_contract=('revenue_amount','mean'), contracts=('contractnumber','count')).reset_index()
+    fuel_comp['total_revenue'] *= 1
+    fuel_comp['avg_rev_contract'] *= 1
+    fig_fuel_comp = px.bar(fuel_comp, x='fueltypecode', y='total_revenue', color='fueltypecode', title='Total Revenue by Fuel Type')
+    fig_fuel_comp.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
+    fig_fuel_comp.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
+    st.plotly_chart(fig_fuel_comp, use_container_width=True)
+
+    fig_fuel_avg = px.bar(fuel_comp, x='fueltypecode', y='avg_rev_contract', color='fueltypecode', title='Average Revenue per Contract by Fuel Type')
+    fig_fuel_avg.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
+    fig_fuel_avg.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
+    st.plotly_chart(fig_fuel_avg, use_container_width=True)
+
+    st.dataframe(fuel_comp)
+
+# -----------------------------
+# Car Model Analysis Tab
+# -----------------------------
+with tabs[6]:
+    st.subheader("Car Model Analysis by Fuel Type")
+    basis_option = st.session_state.get("rev_basis", "Capital+Interest+Fees+Other")
+    if basis_option == "Capital Only":
+        filtered['revenue_amount'] = pd.to_numeric(filtered['totalcapitalamount'].astype(str).str.replace(',','').str.strip(), errors='coerce')
+    elif basis_option == "Capital+Interest+Fees+Other":
+        cols = ['totalcapitalamount','totalinterestamount','totalfeeamount','totalotheramount']
+        for c in cols:
+            if c not in filtered.columns:
+                filtered[c] = 0
+        filtered['revenue_amount'] = filtered[cols].apply(lambda x: pd.to_numeric(x.astype(str).str.replace(',','').str.strip(), errors='coerce')).sum(axis=1)
+    else:
+        filtered['revenue_amount'] = pd.to_numeric(filtered['netbookvalue'].astype(str).str.replace(',','').str.strip(), errors='coerce')
+
+    filtered['revenue_amount'] *= conversion_rate
+    top_n = st.slider("Select Top N Models", min_value=5, max_value=20, value=10)
+    st.caption(f"Applied conversion: 1 EUR = {conversion_rate:.2f} {conversion_option}")
+
+    model_fuel_rev = filtered.groupby(['fueltypecode','modeldescription']).agg(revenue=('revenue_amount','sum'), contracts=('contractnumber','count'), avg_rev_contract=('revenue_amount','mean')).reset_index()
+    top_by_fuel = model_fuel_rev.sort_values(['fueltypecode','revenue'], ascending=[True, False]).groupby('fueltypecode').head(top_n)
+    fig_top_by_fuel = px.bar(top_by_fuel, x='modeldescription', y='revenue', color='fueltypecode', title=f'Top {top_n} Models by Revenue within Each Fuel Type')
+    fig_top_by_fuel.update_xaxes(tickangle=45)
+    fig_top_by_fuel.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
+    fig_top_by_fuel.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
+    st.plotly_chart(fig_top_by_fuel, use_container_width=True)
+
+    st.download_button(label="Download Model-Fuel Revenue CSV", data=model_fuel_rev.to_csv(index=False), file_name="model_fuel_revenue.csv", mime="text/csv")
+    st.dataframe(model_fuel_rev.sort_values(['fueltypecode','revenue'], ascending=[True, False]))

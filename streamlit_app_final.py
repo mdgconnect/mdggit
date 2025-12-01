@@ -161,33 +161,10 @@ with tabs[2]:
 
 # Dealer Analysis Tab
 with tabs[3]:
-    # Step 1: Normalize columns
-    filtered.columns = filtered.columns.str.lower()
-    
-    # Step 2: Rename columns
-    filtered = filtered.rename(columns={'dealerbpid': 'DealerID', 'country': 'Country'})
-    
-    st.write("Filtered columns:", filtered.columns.tolist())
     st.subheader("Dealer-Level Analysis")
-    
-    # Step 3: Group by renamed columns
-    dealer_data = (
-        filtered.groupby(['DealerID', 'Country'])
-        .agg(Rate=('is_delinquent', 'mean'))
-        .reset_index()
-    )
-
-    dealer_data['Rate'] = dealer_data['Rate'] * 100
-
-    # Step 4: Plot
-    fig_dealer = px.bar(
-        dealer_data,
-        x='DealerID',
-        y='Rate',
-        color='Country',
-        title='Dealer-Level Delinquency Rate'
-    )
-
+    dealer_data = filtered.groupby(['dealerbpid','Country']).agg(Rate=('is_delinquent','mean')).reset_index().rename(columns={'dealerbpid': 'DealerID', 'country': 'Country'})
+    dealer_data['Rate'] = dealer_data['Rate']*100
+    fig_dealer = px.bar(dealer_data, x='dealerbpid', y='Rate', color='Country', title='Dealer-Level Delinquency Rate')
     st.plotly_chart(fig_dealer, use_container_width=True)
 
 

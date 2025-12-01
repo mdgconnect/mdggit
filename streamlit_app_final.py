@@ -168,6 +168,7 @@ with tabs[3]:
     fig_dealer = px.bar(dealer_data, x='dealerbpid', y='Rate', color='Country', title='Dealer-Level Delinquency Rate')
     st.plotly_chart(fig_dealer, use_container_width=True)
 
+
 # Seasonal Tab
 with tabs[4]:
     st.subheader("Seasonal Trend by Month")

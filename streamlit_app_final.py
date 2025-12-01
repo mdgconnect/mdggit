@@ -206,25 +206,25 @@ with tabs[4]:
     filtered['revenue_amount'] *= conversion_rate
 
     # KPIs
-    total_revenue = filtered['revenue_amount'].sum()
+    Turnover = filtered['revenue_amount'].sum()
     avg_rev_contract = filtered['revenue_amount'].mean()
     total_contracts = filtered['contractnumber'].count()
     c1, c2, c3 = st.columns(3)
-    c1.metric("Total Revenue", f"{currency_symbol} {total_revenue:,.2f}")
+    c1.metric("Total Revenue", f"{currency_symbol} {Turnover:,.2f}")
     c2.metric("Average Revenue per Contract", f"{currency_symbol} {avg_rev_contract:,.2f}")
     c3.metric("Contracts", f"{total_contracts:,}")
     st.caption(f"Applied conversion: 1 EUR = {conversion_rate:.2f} {conversion_option}")
 
     # Charts
-    rev_Country = filtered.groupby('Country').agg(total_revenue=('revenue_amount','sum')).reset_index()
-    fig_rev_Country = px.bar(rev_Country, x='Country', y='total_revenue', title='Revenue by Country')
+    rev_Country = filtered.groupby('Country').agg(Turnover=('revenue_amount','sum')).reset_index()
+    fig_rev_Country = px.bar(rev_Country, x='Country', y='Turnover', title='Revenue by Country')
     fig_rev_Country.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_rev_Country.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_rev_Country, use_container_width=True)
 
-    rev_time = filtered.groupby('month').agg(total_revenue=('revenue_amount','sum')).reset_index()
+    rev_time = filtered.groupby('month').agg(Turnover=('revenue_amount','sum')).reset_index()
     rev_time['Month'] = pd.to_datetime(rev_time['month']+'-01')
-    fig_rev_time = px.line(rev_time, x='Month', y='total_revenue', markers=True, title='Monthly Revenue Trend')
+    fig_rev_time = px.line(rev_time, x='Month', y='Turnover', markers=True, title='Monthly Revenue Trend')
     fig_rev_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_rev_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_rev_time, use_container_width=True)
@@ -233,31 +233,31 @@ with tabs[4]:
     st.markdown("### Revenue Trend by Fuel Type (Monthly)")
     if 'Month' not in filtered.columns:
         filtered['Month'] = pd.to_datetime(filtered['month']+'-01')
-    fuel_time = filtered.groupby(['Month','fueltypecode']).agg(total_revenue=('revenue_amount','sum')).reset_index()
-    fuel_time['total_revenue'] *= 1
+    fuel_time = filtered.groupby(['Month','fueltypecode']).agg(Turnover=('revenue_amount','sum')).reset_index()
+    fuel_time['Turnover'] *= 1
     view_mode = st.radio("Fuel Trend View", ["Multi-line","Stacked area"], index=0, horizontal=True, key="fuel_trend_view")
     if view_mode == "Multi-line":
-        fig_fuel_time = px.line(fuel_time, x='Month', y='total_revenue', color='fueltypecode', markers=True, title='Monthly Revenue by Fuel Type')
+        fig_fuel_time = px.line(fuel_time, x='Month', y='Turnover', color='fueltypecode', markers=True, title='Monthly Revenue by Fuel Type')
     else:
-        fig_fuel_time = px.area(fuel_time, x='Month', y='total_revenue', color='fueltypecode', title='Monthly Revenue by Fuel Type (Stacked)')
+        fig_fuel_time = px.area(fuel_time, x='Month', y='Turnover', color='fueltypecode', title='Monthly Revenue by Fuel Type (Stacked)')
     fig_fuel_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_time, use_container_width=True)
 
     # Revenue trend by Country
     st.markdown("### Revenue Trend by Country (Monthly)")
-    rev_Country_time = filtered.groupby(['Month','Country']).agg(total_revenue=('revenue_amount','sum')).reset_index()
-    fig_Country_time = px.line(rev_Country_time, x='Month', y='total_revenue', color='Country', markers=True, title='Monthly Revenue by Country')
+    rev_Country_time = filtered.groupby(['Month','Country']).agg(Turnover=('revenue_amount','sum')).reset_index()
+    fig_Country_time = px.line(rev_Country_time, x='Month', y='Turnover', color='Country', markers=True, title='Monthly Revenue by Country')
     fig_Country_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_Country_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_Country_time, use_container_width=True)
 
     # Fuel type comparison
     st.markdown("### Fuel Type Comparison")
-    fuel_comp = filtered.groupby('fueltypecode').agg(total_revenue=('revenue_amount','sum'), avg_rev_contract=('revenue_amount','mean'), contracts=('contractnumber','count')).reset_index()
-    fuel_comp['total_revenue'] *= 1
+    fuel_comp = filtered.groupby('fueltypecode').agg(Turnover=('revenue_amount','sum'), avg_rev_contract=('revenue_amount','mean'), contracts=('contractnumber','count')).reset_index()
+    fuel_comp['Turnover'] *= 1
     fuel_comp['avg_rev_contract'] *= 1
-    fig_fuel_comp = px.bar(fuel_comp, x='fueltypecode', y='total_revenue', color='fueltypecode', title='Total Revenue by Fuel Type')
+    fig_fuel_comp = px.bar(fuel_comp, x='fueltypecode', y='Turnover', color='fueltypecode', title='Total Revenue by Fuel Type')
     fig_fuel_comp.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_comp.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_comp, use_container_width=True)

@@ -39,21 +39,21 @@ def prepare(df, Country):
     df['arrears_amount_flag'] = (df['totalarrearamount_num'].fillna(0) > 0) | (df['customertotalarrearamount_num'].fillna(0) > 0)
     df['is_delinquent'] = df[['bucket_flag','is_arrears_substatus','terminated_due_to_arrears','dpd_flag','arrears_amount_flag']].any(axis=1)
     candidates = [parse_date(df.get('oldestduedate')), parse_date(df.get('contractenddate')), parse_date(df.get('workqueue_entrydate'))]
-    event_date = candidates[0]
+    Event = candidates[0]
     for c in candidates[1:]:
-        event_date = event_date.fillna(c)
-    df['event_date'] = pd.to_datetime(event_date, errors='coerce').dt.tz_localize(None)
-    df['month'] = df['event_date'].dt.to_period('M').astype(str)
-    df['quarter'] = df['event_date'].dt.to_period('Q').astype(str)
-    df['year'] = df['event_date'].dt.year
-    df['q_num'] = df['event_date'].dt.quarter
+        Event = Event.fillna(c)
+    df['Event'] = pd.to_datetime(Event, errors='coerce').dt.tz_localize(None)
+    df['month'] = df['Event'].dt.to_period('M').astype(str)
+    df['quarter'] = df['Event'].dt.to_period('Q').astype(str)
+    df['year'] = df['Event'].dt.year
+    df['q_num'] = df['Event'].dt.quarter
     return df
 
 fr, it = load_data()
 fr = prepare(fr,'FRANCE')
 it = prepare(it,'ITALY')
 all_df = pd.concat([fr,it], ignore_index=True)
-mask = (all_df['event_date'] >= pd.Timestamp('2018-01-01')) & (all_df['event_date'] <= pd.Timestamp('2025-12-31'))
+mask = (all_df['Event'] >= pd.Timestamp('2018-01-01')) & (all_df['Event'] <= pd.Timestamp('2025-12-31'))
 all_df = all_df[mask]
 
 # -----------------------------
@@ -62,7 +62,7 @@ all_df = all_df[mask]
 st.sidebar.header("Filters")
 selected_countries = st.sidebar.multiselect("Select Countries", options=sorted(all_df['Country'].unique()), default=sorted(all_df['Country'].unique()))
 cust_filter = st.sidebar.multiselect("Customer Type", options=sorted(all_df['legalentitycode'].dropna().unique()), default=[])
-date_range = st.sidebar.date_input("Date Range", value=(all_df['event_date'].min().date(), all_df['event_date'].max().date()))
+date_range = st.sidebar.date_input("Date Range", value=(all_df['Event'].min().date(), all_df['Event'].max().date()))
 
 # Advanced filters
 model_filter = st.sidebar.multiselect("Vehicle Model", options=sorted(all_df['modeldescription'].dropna().unique()), default=[], key="model_filter")
@@ -100,7 +100,7 @@ if reset_conversion:
     st.rerun()
 
 # Apply filters
-filtered = all_df[(all_df['Country'].isin(selected_countries)) & (all_df['event_date'].dt.date >= date_range[0]) & (all_df['event_date'].dt.date <= date_range[1])]
+filtered = all_df[(all_df['Country'].isin(selected_countries)) & (all_df['Event'].dt.date >= date_range[0]) & (all_df['Event'].dt.date <= date_range[1])]
 if cust_filter:
     filtered = filtered[filtered['legalentitycode'].isin(cust_filter)]
 if model_filter:
@@ -170,10 +170,11 @@ with tabs[3]:
 # Seasonal Tab
 with tabs[4]:
     st.subheader("Seasonal Trend by Month")
-    seasonal = filtered.groupby([filtered['Event'].dt.month_name(),'Country']).agg(RatePercentage=('is_delinquent','mean')).reset_index()
-    seasonal['RatePercentage'] = seasonal['RatePercentage']*100
-    fig_seasonal = px.bar(seasonal, x='Event', y='RatePercentage', color='Country', title='Seasonal Trend')
+    seasonal = filtered.groupby([filtered['Event'].dt.month_name(),'Country']).agg(Rate Percentage=('is_delinquent','mean')).reset_index()
+    seasonal['Rate Percentage'] = seasonal['Rate Percentage']*100
+    fig_seasonal = px.bar(seasonal, x='Event', y='Rate Percentage', color='Country', title='Seasonal Trend')
     st.plotly_chart(fig_seasonal, use_container_width=True)
+
 
 # -----------------------------
 # Financial Revenue Analysis Tab

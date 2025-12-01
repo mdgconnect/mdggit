@@ -112,7 +112,7 @@ if model_search:
 
 # Tabs
 # -----------------------------
-tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Dealer Analysis","Seasonal","Financial Revenue Analysis","Car Model Analysis"])
+tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Seasonal","Financial Revenue Analysis","Car Model Analysis"])
 # Multi-Country Trends
 with tabs[0]:
     st.subheader("Monthly Delinquency Rate by Country")

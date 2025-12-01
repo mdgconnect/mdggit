@@ -66,7 +66,7 @@ date_range = st.sidebar.date_input("Date Range", value=(all_df['Event'].min().da
 
 # Advanced filters
 model_filter = st.sidebar.multiselect("Vehicle Model", options=sorted(all_df['modeldescription'].dropna().unique()), default=[], key="model_filter")
-fuel_filter = st.sidebar.multiselect("Fuel Type", options=sorted(all_df['FuelType'].dropna().unique()), default=[], key="fuel_filter")
+fuel_filter = st.sidebar.multiselect("fueltypecode", options=sorted(all_df['FuelType'].dropna().unique()), default=[], key="fuel_filter")
 model_search = st.sidebar.text_input("Search Model", value="", key="model_search")
 
 # Global revenue basis

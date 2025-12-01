@@ -172,7 +172,7 @@ with tabs[4]:
     st.subheader("Seasonal Trend by Month")
     seasonal = filtered.groupby([filtered['event_date'].dt.month_name(),'Country']).agg(RatePercentage=('is_delinquent','mean')).reset_index()
     seasonal['RatePercentage'] = seasonal['RatePercentage']*100
-    fig_seasonal = px.bar(seasonal, x='event_date', y='Rate Percentage', color='Country', title='Seasonal Trend')
+    fig_seasonal = px.bar(seasonal, x='event_date', y='RatePercentage', color='Country', title='Seasonal Trend')
     st.plotly_chart(fig_seasonal, use_container_width=True)
 
 # -----------------------------

@@ -159,8 +159,21 @@ with tabs[2]:
     fig_q4q1.update_layout(title='Fiscal Q4 vs Q1 Comparison')
     st.plotly_chart(fig_q4q1, use_container_width=True)
 
+# Dealer Analysis Tab
+with tabs[3]:
+    st.subheader("Dealer-Level Analysis")
+    dealer_data = filtered.groupby(['dealerbpid','country']).agg(rate=('is_delinquent','mean')).reset_index()
+    dealer_data['rate'] = dealer_data['rate']*100
+    fig_dealer = px.bar(dealer_data, x='dealerbpid', y='rate', color='country', title='Dealer-Level Delinquency Rate')
+    st.plotly_chart(fig_dealer, use_container_width=True)
 
-
+# Seasonal Tab
+with tabs[4]:
+    st.subheader("Seasonal Trend by Month")
+    seasonal = filtered.groupby([filtered['event_date'].dt.month_name(),'country']).agg(rate=('is_delinquent','mean')).reset_index()
+    seasonal['rate'] = seasonal['rate']*100
+    fig_seasonal = px.bar(seasonal, x='event_date', y='rate', color='country', title='Seasonal Trend')
+    st.plotly_chart(fig_seasonal, use_container_width=True)
 
 # -----------------------------
 # Financial Revenue Analysis Tab

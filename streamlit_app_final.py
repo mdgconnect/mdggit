@@ -161,25 +161,25 @@ with tabs[2]:
 
 # Dealer Analysis Tab
 with tabs[3]:
-    # Normalize all column names to lowercase
+    # Step 1: Normalize columns
     filtered.columns = filtered.columns.str.lower()
     
-    # Rename dealerbpid to DealerID
+    # Step 2: Rename columns
     filtered = filtered.rename(columns={'dealerbpid': 'DealerID', 'country': 'Country'})
     
     st.write("Filtered columns:", filtered.columns.tolist())
     st.subheader("Dealer-Level Analysis")
     
-    # Group by the new column names
+    # Step 3: Group by renamed columns
     dealer_data = (
-        filtered.groupby(['DealerID','Country'])
-        .agg(Rate=('is_delinquent','mean'))
+        filtered.groupby(['DealerID', 'Country'])
+        .agg(Rate=('is_delinquent', 'mean'))
         .reset_index()
     )
 
     dealer_data['Rate'] = dealer_data['Rate'] * 100
 
-    # Plot
+    # Step 4: Plot
     fig_dealer = px.bar(
         dealer_data,
         x='DealerID',

@@ -170,11 +170,10 @@ with tabs[3]:
 # Seasonal Tab
 with tabs[4]:
     st.subheader("Seasonal Trend by Month")
-    seasonal = filtered.groupby([filtered['event_date'].dt.month_name(),'Country']).agg(rate=('is_delinquent','mean')).reset_index()
-    seasonal['rate'] = seasonal['rate']*100
-    fig_seasonal = px.bar(seasonal, x='event_date', y='rate', color='Country', title='Seasonal Trend')
+    seasonal = filtered.groupby([filtered['event_date'].dt.month_name(),'Country']).agg(Rate Percentage=('is_delinquent','mean')).reset_index()
+    seasonal['Rate Percentage'] = seasonal['Rate Percentage']*100
+    fig_seasonal = px.bar(seasonal, x='event_date', y='Rate Percentage', color='Country', title='Seasonal Trend')
     st.plotly_chart(fig_seasonal, use_container_width=True)
-
 
 # -----------------------------
 # Financial Revenue Analysis Tab

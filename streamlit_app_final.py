@@ -261,12 +261,12 @@ with tabs[4]:
     fuel_comp = filtered.groupby('fueltypecode').agg(Turnover=('revenue_amount','sum'), avg_rev_contract=('revenue_amount','mean'), contracts=('contractnumber','count')).reset_index()
     fuel_comp['Turnover'] *= 1
     fuel_comp['avg_rev_contract'] *= 1
-    fig_fuel_comp = px.bar(fuel_comp, x='FuelType', y='Turnover', color='fueltypecode', title='Total Revenue by Fuel Type')
+    fig_fuel_comp = px.bar(fuel_comp, x='fueltypecode', y='Turnover', color='fueltypecode', title='Total Revenue by Fuel Type')
     fig_fuel_comp.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_comp.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_comp, use_container_width=True)
 
-    fig_fuel_avg = px.bar(fuel_comp, x='FuelType', y='avg_rev_contract', color='fueltypecode', title='Average Revenue per Contract by Fuel Type')
+    fig_fuel_avg = px.bar(fuel_comp, x='fueltypecode', y='avg_rev_contract', color='fueltypecode', title='Average Revenue per Contract by Fuel Type')
     fig_fuel_avg.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_avg.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_avg, use_container_width=True)

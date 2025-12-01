@@ -237,7 +237,7 @@ with tabs[4]:
     st.markdown("### Revenue Trend by Fuel Type (Monthly)")
     if 'Month' not in filtered.columns:
         filtered['Month'] = pd.to_datetime(filtered['month']+'-01')
-    fuel_time = filtered.groupby(['Month','FuelType']).agg(Turnover=('revenue_amount','sum')).reset_index()
+    fuel_time = filtered.groupby(['Month','fueltypecode']).agg(Turnover=('revenue_amount','sum')).reset_index()
     fuel_time['Turnover'] *= 1
     view_mode = st.radio("Fuel Trend View", ["Multi-line","Stacked area"], index=0, horizontal=True, key="fuel_trend_view")
     if view_mode == "Multi-line":

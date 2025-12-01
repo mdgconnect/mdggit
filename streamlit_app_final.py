@@ -22,12 +22,12 @@ def load_data():
     return fr, it
 
 @st.cache_data(show_spinner=False)
-def prepare(df, Country):
+def prepare(df, country):
     def parse_date(s):
         return pd.to_datetime(s, errors='coerce')
     def to_float(s):
         return pd.to_numeric(s.astype(str).str.replace(',','').str.strip(), errors='coerce')
-    df['Country'] = Country
+    df['country'] = country
     for col in ['totalarrearamount','customertotalarrearamount','dpd']:
         df[col+'_num'] = to_float(df.get(col,''))
     df['bucket_flag'] = df.get('bucket','').str.contains('Bucket', case=False, na=False)
@@ -39,30 +39,30 @@ def prepare(df, Country):
     df['arrears_amount_flag'] = (df['totalarrearamount_num'].fillna(0) > 0) | (df['customertotalarrearamount_num'].fillna(0) > 0)
     df['is_delinquent'] = df[['bucket_flag','is_arrears_substatus','terminated_due_to_arrears','dpd_flag','arrears_amount_flag']].any(axis=1)
     candidates = [parse_date(df.get('oldestduedate')), parse_date(df.get('contractenddate')), parse_date(df.get('workqueue_entrydate'))]
-    Event = candidates[0]
+    event_date = candidates[0]
     for c in candidates[1:]:
-        Event = Event.fillna(c)
-    df['Event'] = pd.to_datetime(Event, errors='coerce').dt.tz_localize(None)
-    df['month'] = df['Event'].dt.to_period('M').astype(str)
-    df['quarter'] = df['Event'].dt.to_period('Q').astype(str)
-    df['year'] = df['Event'].dt.year
-    df['q_num'] = df['Event'].dt.quarter
+        event_date = event_date.fillna(c)
+    df['event_date'] = pd.to_datetime(event_date, errors='coerce').dt.tz_localize(None)
+    df['month'] = df['event_date'].dt.to_period('M').astype(str)
+    df['quarter'] = df['event_date'].dt.to_period('Q').astype(str)
+    df['year'] = df['event_date'].dt.year
+    df['q_num'] = df['event_date'].dt.quarter
     return df
 
 fr, it = load_data()
 fr = prepare(fr,'FRANCE')
 it = prepare(it,'ITALY')
 all_df = pd.concat([fr,it], ignore_index=True)
-mask = (all_df['Event'] >= pd.Timestamp('2018-01-01')) & (all_df['Event'] <= pd.Timestamp('2025-12-31'))
+mask = (all_df['event_date'] >= pd.Timestamp('2018-01-01')) & (all_df['event_date'] <= pd.Timestamp('2025-12-31'))
 all_df = all_df[mask]
 
 # -----------------------------
 # Sidebar Filters
 # -----------------------------
 st.sidebar.header("Filters")
-selected_countries = st.sidebar.multiselect("Select Countries", options=sorted(all_df['Country'].unique()), default=sorted(all_df['Country'].unique()))
+selected_countries = st.sidebar.multiselect("Select Countries", options=sorted(all_df['country'].unique()), default=sorted(all_df['country'].unique()))
 cust_filter = st.sidebar.multiselect("Customer Type", options=sorted(all_df['legalentitycode'].dropna().unique()), default=[])
-date_range = st.sidebar.date_input("Date Range", value=(all_df['Event'].min().date(), all_df['Event'].max().date()))
+date_range = st.sidebar.date_input("Date Range", value=(all_df['event_date'].min().date(), all_df['event_date'].max().date()))
 
 # Advanced filters
 model_filter = st.sidebar.multiselect("Vehicle Model", options=sorted(all_df['modeldescription'].dropna().unique()), default=[], key="model_filter")
@@ -100,7 +100,7 @@ if reset_conversion:
     st.rerun()
 
 # Apply filters
-filtered = all_df[(all_df['Country'].isin(selected_countries)) & (all_df['Event'].dt.date >= date_range[0]) & (all_df['Event'].dt.date <= date_range[1])]
+filtered = all_df[(all_df['country'].isin(selected_countries)) & (all_df['event_date'].dt.date >= date_range[0]) & (all_df['event_date'].dt.date <= date_range[1])]
 if cust_filter:
     filtered = filtered[filtered['legalentitycode'].isin(cust_filter)]
 if model_filter:
@@ -116,49 +116,48 @@ tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Dealer Anal
 # Multi-Country Trends
 with tabs[0]:
     st.subheader("Monthly Delinquency Rate by Country")
-    monthly = filtered.groupby(['Country','month']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
-    monthly['Rate Percentage'] = (monthly['delinq']/monthly['total']*100).round(2)
-    monthly['Month'] = pd.to_datetime(monthly['month']+'-01')
-    fig_month = px.line(monthly, x='Month', y='Rate Percentage', color='Country', markers=True, title='Monthly Delinquency Rate')
+    monthly = filtered.groupby(['country','month']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
+    monthly['rate_pct'] = (monthly['delinq']/monthly['total']*100).round(2)
+    monthly['month_dt'] = pd.to_datetime(monthly['month']+'-01')
+    fig_month = px.line(monthly, x='month_dt', y='rate_pct', color='country', markers=True, title='Monthly Delinquency Rate')
     st.plotly_chart(fig_month, use_container_width=True)
 
     st.subheader("Quarterly Delinquency Rate by Country")
-    quarterly = filtered.groupby(['Country','quarter']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
-    quarterly['Rate Percentage'] = (quarterly['delinq']/quarterly['total']*100).round(2)
-    quarterly['Quarter'] = pd.PeriodIndex(quarterly['quarter'], freq='Q').to_timestamp()
-    fig_quarter = px.line(quarterly, x='Quarter', y='Rate Percentage', color='Country', markers=True, title='Quarterly Delinquency Rate')
+    quarterly = filtered.groupby(['country','quarter']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
+    quarterly['rate_pct'] = (quarterly['delinq']/quarterly['total']*100).round(2)
+    quarterly['q_dt'] = pd.PeriodIndex(quarterly['quarter'], freq='Q').to_timestamp()
+    fig_quarter = px.line(quarterly, x='q_dt', y='rate_pct', color='country', markers=True, title='Quarterly Delinquency Rate')
     st.plotly_chart(fig_quarter, use_container_width=True)
 
 # Variance Tab
 with tabs[1]:
     st.subheader("MoM Variance")
     if not monthly.empty:
-        monthly_sorted = monthly.sort_values(['Country','Month'])
-        monthly_sorted['MoM Variance'] = monthly_sorted.groupby('Country')['Rate Percentage'].pct_change()*100
-        fig_mom = px.bar(monthly_sorted, x='Month', y='MoM Variance', color='Country', title='MoM Variance (%)')
+        monthly_sorted = monthly.sort_values(['country','month_dt'])
+        monthly_sorted['mom_var'] = monthly_sorted.groupby('country')['rate_pct'].pct_change()*100
+        fig_mom = px.bar(monthly_sorted, x='month_dt', y='mom_var', color='country', title='MoM Variance (%)')
         st.plotly_chart(fig_mom, use_container_width=True)
 
     st.subheader("QoQ Variance")
     if not quarterly.empty:
-        quarterly_sorted = quarterly.sort_values(['Country','Quarter'])
-        quarterly_sorted['QoQ Variance'] = quarterly_sorted.groupby('Country')['Rate Percentage'].pct_change()*100
-        fig_qoq = px.bar(quarterly_sorted, x='Quarter', y='QoQ Variance', color='Country', title='QoQ Variance (%)')
+        quarterly_sorted = quarterly.sort_values(['country','q_dt'])
+        quarterly_sorted['qoq_var'] = quarterly_sorted.groupby('country')['rate_pct'].pct_change()*100
+        fig_qoq = px.bar(quarterly_sorted, x='q_dt', y='qoq_var', color='country', title='QoQ Variance (%)')
         st.plotly_chart(fig_qoq, use_container_width=True)
 
 # Fiscal Analysis Tab
 with tabs[2]:
     st.subheader("Fiscal Q4 vs Q1 Comparison")
-    q4q1 = filtered[filtered['q_num'].isin([1,4])].groupby(['Country','year','q_num']).agg(rate=('is_delinquent','mean')).reset_index()
+    q4q1 = filtered[filtered['q_num'].isin([1,4])].groupby(['country','year','q_num']).agg(rate=('is_delinquent','mean')).reset_index()
     q4q1['rate'] = q4q1['rate']*100
-    pivot_q4q1 = q4q1.pivot_table(index=['Country','year'], columns='q_num', values='rate').reset_index()
+    pivot_q4q1 = q4q1.pivot_table(index=['country','year'], columns='q_num', values='rate').reset_index()
     fig_q4q1 = go.Figure()
-    for Country in selected_countries:
-        d = pivot_q4q1[pivot_q4q1['Country']==Country]
-        fig_q4q1.add_trace(go.Scatter(x=d['year'], y=d.get(4,[]), mode='lines+markers', name=f'{Country} Q4'))
-        fig_q4q1.add_trace(go.Scatter(x=d['year'], y=d.get(1,[]), mode='lines+markers', name=f'{Country} Q1'))
+    for country in selected_countries:
+        d = pivot_q4q1[pivot_q4q1['country']==country]
+        fig_q4q1.add_trace(go.Scatter(x=d['year'], y=d.get(4,[]), mode='lines+markers', name=f'{country} Q4'))
+        fig_q4q1.add_trace(go.Scatter(x=d['year'], y=d.get(1,[]), mode='lines+markers', name=f'{country} Q1'))
     fig_q4q1.update_layout(title='Fiscal Q4 vs Q1 Comparison')
     st.plotly_chart(fig_q4q1, use_container_width=True)
-
 
 # Dealer Analysis Tab
 with tabs[3]:
@@ -193,6 +192,7 @@ with tabs[4]:
     st.plotly_chart(fig_seasonal, use_container_width=True)
 
 
+
 # -----------------------------
 # Financial Revenue Analysis Tab
 # -----------------------------
@@ -224,41 +224,41 @@ with tabs[5]:
     st.caption(f"Applied conversion: 1 EUR = {conversion_rate:.2f} {conversion_option}")
 
     # Charts
-    rev_Country = filtered.groupby('Country').agg(total_revenue=('revenue_amount','sum')).reset_index()
-    fig_rev_Country = px.bar(rev_Country, x='Country', y='total_revenue', title='Revenue by Country')
-    fig_rev_Country.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
-    fig_rev_Country.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
-    st.plotly_chart(fig_rev_Country, use_container_width=True)
+    rev_country = filtered.groupby('country').agg(total_revenue=('revenue_amount','sum')).reset_index()
+    fig_rev_country = px.bar(rev_country, x='country', y='total_revenue', title='Revenue by Country')
+    fig_rev_country.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
+    fig_rev_country.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
+    st.plotly_chart(fig_rev_country, use_container_width=True)
 
     rev_time = filtered.groupby('month').agg(total_revenue=('revenue_amount','sum')).reset_index()
-    rev_time['Month'] = pd.to_datetime(rev_time['month']+'-01')
-    fig_rev_time = px.line(rev_time, x='Month', y='total_revenue', markers=True, title='Monthly Revenue Trend')
+    rev_time['month_dt'] = pd.to_datetime(rev_time['month']+'-01')
+    fig_rev_time = px.line(rev_time, x='month_dt', y='total_revenue', markers=True, title='Monthly Revenue Trend')
     fig_rev_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_rev_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_rev_time, use_container_width=True)
 
     # Revenue trend by fuel type
     st.markdown("### Revenue Trend by Fuel Type (Monthly)")
-    if 'Month' not in filtered.columns:
-        filtered['Month'] = pd.to_datetime(filtered['month']+'-01')
-    fuel_time = filtered.groupby(['Month','fueltypecode']).agg(total_revenue=('revenue_amount','sum')).reset_index()
+    if 'month_dt' not in filtered.columns:
+        filtered['month_dt'] = pd.to_datetime(filtered['month']+'-01')
+    fuel_time = filtered.groupby(['month_dt','fueltypecode']).agg(total_revenue=('revenue_amount','sum')).reset_index()
     fuel_time['total_revenue'] *= 1
     view_mode = st.radio("Fuel Trend View", ["Multi-line","Stacked area"], index=0, horizontal=True, key="fuel_trend_view")
     if view_mode == "Multi-line":
-        fig_fuel_time = px.line(fuel_time, x='Month', y='total_revenue', color='fueltypecode', markers=True, title='Monthly Revenue by Fuel Type')
+        fig_fuel_time = px.line(fuel_time, x='month_dt', y='total_revenue', color='fueltypecode', markers=True, title='Monthly Revenue by Fuel Type')
     else:
-        fig_fuel_time = px.area(fuel_time, x='Month', y='total_revenue', color='fueltypecode', title='Monthly Revenue by Fuel Type (Stacked)')
+        fig_fuel_time = px.area(fuel_time, x='month_dt', y='total_revenue', color='fueltypecode', title='Monthly Revenue by Fuel Type (Stacked)')
     fig_fuel_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_time, use_container_width=True)
 
-    # Revenue trend by Country
+    # Revenue trend by country
     st.markdown("### Revenue Trend by Country (Monthly)")
-    rev_Country_time = filtered.groupby(['Month','Country']).agg(total_revenue=('revenue_amount','sum')).reset_index()
-    fig_Country_time = px.line(rev_Country_time, x='Month', y='total_revenue', color='Country', markers=True, title='Monthly Revenue by Country')
-    fig_Country_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
-    fig_Country_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
-    st.plotly_chart(fig_Country_time, use_container_width=True)
+    rev_country_time = filtered.groupby(['month_dt','country']).agg(total_revenue=('revenue_amount','sum')).reset_index()
+    fig_country_time = px.line(rev_country_time, x='month_dt', y='total_revenue', color='country', markers=True, title='Monthly Revenue by Country')
+    fig_country_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
+    fig_country_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
+    st.plotly_chart(fig_country_time, use_container_width=True)
 
     # Fuel type comparison
     st.markdown("### Fuel Type Comparison")

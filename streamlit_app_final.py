@@ -118,8 +118,8 @@ with tabs[0]:
     st.subheader("Monthly Delinquency Rate by Country")
     monthly = filtered.groupby(['country','month']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
     monthly['rate_pct'] = (monthly['delinq']/monthly['total']*100).round(2)
-    monthly['month_dt'] = pd.to_datetime(monthly['month']+'-01')
-    fig_month = px.line(monthly, x='month_dt', y='rate_pct', color='country', markers=True, title='Monthly Delinquency Rate')
+    monthly['Month'] = pd.to_datetime(monthly['month']+'-01')
+    fig_month = px.line(monthly, x='Month', y='rate_pct', color='country', markers=True, title='Monthly Delinquency Rate')
     st.plotly_chart(fig_month, use_container_width=True)
 
     st.subheader("Quarterly Delinquency Rate by Country")
@@ -133,9 +133,9 @@ with tabs[0]:
 with tabs[1]:
     st.subheader("MoM Variance")
     if not monthly.empty:
-        monthly_sorted = monthly.sort_values(['country','month_dt'])
+        monthly_sorted = monthly.sort_values(['country','Month'])
         monthly_sorted['mom_var'] = monthly_sorted.groupby('country')['rate_pct'].pct_change()*100
-        fig_mom = px.bar(monthly_sorted, x='month_dt', y='mom_var', color='country', title='MoM Variance (%)')
+        fig_mom = px.bar(monthly_sorted, x='Month', y='mom_var', color='country', title='MoM Variance (%)')
         st.plotly_chart(fig_mom, use_container_width=True)
 
     st.subheader("QoQ Variance")
@@ -214,31 +214,31 @@ with tabs[5]:
     st.plotly_chart(fig_rev_country, use_container_width=True)
 
     rev_time = filtered.groupby('month').agg(total_revenue=('revenue_amount','sum')).reset_index()
-    rev_time['month_dt'] = pd.to_datetime(rev_time['month']+'-01')
-    fig_rev_time = px.line(rev_time, x='month_dt', y='total_revenue', markers=True, title='Monthly Revenue Trend')
+    rev_time['Month'] = pd.to_datetime(rev_time['month']+'-01')
+    fig_rev_time = px.line(rev_time, x='Month', y='total_revenue', markers=True, title='Monthly Revenue Trend')
     fig_rev_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_rev_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_rev_time, use_container_width=True)
 
     # Revenue trend by fuel type
     st.markdown("### Revenue Trend by Fuel Type (Monthly)")
-    if 'month_dt' not in filtered.columns:
-        filtered['month_dt'] = pd.to_datetime(filtered['month']+'-01')
-    fuel_time = filtered.groupby(['month_dt','fueltypecode']).agg(total_revenue=('revenue_amount','sum')).reset_index()
+    if 'Month' not in filtered.columns:
+        filtered['Month'] = pd.to_datetime(filtered['month']+'-01')
+    fuel_time = filtered.groupby(['Month','fueltypecode']).agg(total_revenue=('revenue_amount','sum')).reset_index()
     fuel_time['total_revenue'] *= 1
     view_mode = st.radio("Fuel Trend View", ["Multi-line","Stacked area"], index=0, horizontal=True, key="fuel_trend_view")
     if view_mode == "Multi-line":
-        fig_fuel_time = px.line(fuel_time, x='month_dt', y='total_revenue', color='fueltypecode', markers=True, title='Monthly Revenue by Fuel Type')
+        fig_fuel_time = px.line(fuel_time, x='Month', y='total_revenue', color='fueltypecode', markers=True, title='Monthly Revenue by Fuel Type')
     else:
-        fig_fuel_time = px.area(fuel_time, x='month_dt', y='total_revenue', color='fueltypecode', title='Monthly Revenue by Fuel Type (Stacked)')
+        fig_fuel_time = px.area(fuel_time, x='Month', y='total_revenue', color='fueltypecode', title='Monthly Revenue by Fuel Type (Stacked)')
     fig_fuel_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_time, use_container_width=True)
 
     # Revenue trend by country
     st.markdown("### Revenue Trend by Country (Monthly)")
-    rev_country_time = filtered.groupby(['month_dt','country']).agg(total_revenue=('revenue_amount','sum')).reset_index()
-    fig_country_time = px.line(rev_country_time, x='month_dt', y='total_revenue', color='country', markers=True, title='Monthly Revenue by Country')
+    rev_country_time = filtered.groupby(['Month','country']).agg(total_revenue=('revenue_amount','sum')).reset_index()
+    fig_country_time = px.line(rev_country_time, x='Month', y='total_revenue', color='country', markers=True, title='Monthly Revenue by Country')
     fig_country_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_country_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_country_time, use_container_width=True)

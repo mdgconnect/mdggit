@@ -117,16 +117,16 @@ tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Dealer Anal
 with tabs[0]:
     st.subheader("Monthly Delinquency Rate by Country")
     monthly = filtered.groupby(['Country','month']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
-    monthly['Rate%'] = (monthly['delinq']/monthly['total']*100).round(2)
+    monthly['Rate Percentage'] = (monthly['delinq']/monthly['total']*100).round(2)
     monthly['Month'] = pd.to_datetime(monthly['month']+'-01')
-    fig_month = px.line(monthly, x='Month', y='Rate%', color='Country', markers=True, title='Monthly Delinquency Rate')
+    fig_month = px.line(monthly, x='Month', y='Rate Percentage', color='Country', markers=True, title='Monthly Delinquency Rate')
     st.plotly_chart(fig_month, use_container_width=True)
 
     st.subheader("Quarterly Delinquency Rate by Country")
     quarterly = filtered.groupby(['Country','quarter']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
-    quarterly['Rate%'] = (quarterly['delinq']/quarterly['total']*100).round(2)
-    quarterly['q_dt'] = pd.PeriodIndex(quarterly['quarter'], freq='Q').to_timestamp()
-    fig_quarter = px.line(quarterly, x='q_dt', y='Rate%', color='Country', markers=True, title='Quarterly Delinquency Rate')
+    quarterly['Rate Percentage'] = (quarterly['delinq']/quarterly['total']*100).round(2)
+    quarterly['Quarter'] = pd.PeriodIndex(quarterly['quarter'], freq='Q').to_timestamp()
+    fig_quarter = px.line(quarterly, x='Quarter', y='Rate Percentage', color='Country', markers=True, title='Quarterly Delinquency Rate')
     st.plotly_chart(fig_quarter, use_container_width=True)
 
 # Variance Tab
@@ -134,15 +134,15 @@ with tabs[1]:
     st.subheader("MoM Variance")
     if not monthly.empty:
         monthly_sorted = monthly.sort_values(['Country','Month'])
-        monthly_sorted['mom_var'] = monthly_sorted.groupby('Country')['Rate%'].pct_change()*100
+        monthly_sorted['mom_var'] = monthly_sorted.groupby('Country')['Rate Percentage'].pct_change()*100
         fig_mom = px.bar(monthly_sorted, x='Month', y='mom_var', color='Country', title='MoM Variance (%)')
         st.plotly_chart(fig_mom, use_container_width=True)
 
     st.subheader("QoQ Variance")
     if not quarterly.empty:
-        quarterly_sorted = quarterly.sort_values(['Country','q_dt'])
-        quarterly_sorted['qoq_var'] = quarterly_sorted.groupby('Country')['Rate%'].pct_change()*100
-        fig_qoq = px.bar(quarterly_sorted, x='q_dt', y='qoq_var', color='Country', title='QoQ Variance (%)')
+        quarterly_sorted = quarterly.sort_values(['Country','Quarter'])
+        quarterly_sorted['qoq_var'] = quarterly_sorted.groupby('Country')['Rate Percentage'].pct_change()*100
+        fig_qoq = px.bar(quarterly_sorted, x='Quarter', y='qoq_var', color='Country', title='QoQ Variance (%)')
         st.plotly_chart(fig_qoq, use_container_width=True)
 
 # Fiscal Analysis Tab

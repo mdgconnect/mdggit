@@ -134,15 +134,15 @@ with tabs[1]:
     st.subheader("MoM Variance")
     if not monthly.empty:
         monthly_sorted = monthly.sort_values(['Country','Month'])
-        monthly_sorted['mom_var'] = monthly_sorted.groupby('Country')['Rate Percentage'].pct_change()*100
-        fig_mom = px.bar(monthly_sorted, x='Month', y='mom_var', color='Country', title='MoM Variance (%)')
+        monthly_sorted['MoM Variance'] = monthly_sorted.groupby('Country')['Rate Percentage'].pct_change()*100
+        fig_mom = px.bar(monthly_sorted, x='Month', y='MoM Variance', color='Country', title='MoM Variance (%)')
         st.plotly_chart(fig_mom, use_container_width=True)
 
     st.subheader("QoQ Variance")
     if not quarterly.empty:
         quarterly_sorted = quarterly.sort_values(['Country','Quarter'])
-        quarterly_sorted['qoq_var'] = quarterly_sorted.groupby('Country')['Rate Percentage'].pct_change()*100
-        fig_qoq = px.bar(quarterly_sorted, x='Quarter', y='qoq_var', color='Country', title='QoQ Variance (%)')
+        quarterly_sorted['QoQ Variance'] = quarterly_sorted.groupby('Country')['Rate Percentage'].pct_change()*100
+        fig_qoq = px.bar(quarterly_sorted, x='Quarter', y='QoQ Variance', color='Country', title='QoQ Variance (%)')
         st.plotly_chart(fig_qoq, use_container_width=True)
 
 # Fiscal Analysis Tab
@@ -164,7 +164,7 @@ with tabs[3]:
     st.subheader("Dealer-Level Analysis")
     dealer_data = filtered.groupby(['dealerbpid','Country']).agg(rate=('is_delinquent','mean')).reset_index()
     dealer_data['rate'] = dealer_data['rate']*100
-    fig_dealer = px.bar(dealer_data, x='dealerbpid', y='rate', color='Country', title='Dealer-Level Delinquency Rate')
+    fig_dealer = px.bar(dealer_data, x='Dealer ID', y='Dealer Rate', color='Country', title='Dealer-Level Delinquency Rate')
     st.plotly_chart(fig_dealer, use_container_width=True)
 
 # Seasonal Tab

@@ -166,7 +166,7 @@ with tabs[3]:
     filtered.columns = filtered.columns.str.lower()
 
     # 2️⃣ Rename dealerbpid → dealerid
-    filtered = filtered.rename(columns={'dealerbpid': 'dealerid'})
+    filtered = filtered.rename(columns={'DealerID': 'dealerid'})
 
     st.write("Filtered columns:", filtered.columns.tolist())
     st.subheader("Dealer-Level Analysis")

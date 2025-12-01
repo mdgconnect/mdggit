@@ -161,7 +161,7 @@ with tabs[2]:
 
 
 # Seasonal Tab
-with tabs[4]:
+with tabs[3]:
     st.subheader("Seasonal Trend by Month")
 
     seasonal = (
@@ -188,7 +188,7 @@ with tabs[4]:
 # -----------------------------
 # Financial Revenue Analysis Tab
 # -----------------------------
-with tabs[5]:
+with tabs[4]:
     st.subheader("Financial Revenue Analysis")
     basis_option = st.session_state.get("rev_basis", "Capital+Interest+Fees+Other")
     if basis_option == "Capital Only":
@@ -272,7 +272,7 @@ with tabs[5]:
 # -----------------------------
 # Car Model Analysis Tab
 # -----------------------------
-with tabs[6]:
+with tabs[5]:
     st.subheader("Car Model Analysis by Fuel Type")
     basis_option = st.session_state.get("rev_basis", "Capital+Interest+Fees+Other")
     if basis_option == "Capital Only":

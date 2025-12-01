@@ -161,12 +161,35 @@ with tabs[2]:
 
 # Dealer Analysis Tab
 with tabs[3]:
+    # Normalize all column names to lowercase
+    filtered.columns = filtered.columns.str.lower()
+    
+    # Rename dealerbpid to DealerID
+    filtered = filtered.rename(columns={'dealerbpid': 'DealerID', 'country': 'Country'})
+    
     st.write("Filtered columns:", filtered.columns.tolist())
     st.subheader("Dealer-Level Analysis")
-    dealer_data = filtered.groupby(['Dealerbpid','Country']).agg(Rate=('is_delinquent','mean')).reset_index()
-    dealer_data['Rate'] = dealer_data['Rate']*100
-    fig_dealer = px.bar(dealer_data, x='Dealerbpid', y='Rate', color='Country', title='Dealer-Level Delinquency Rate')
+    
+    # Group by the new column names
+    dealer_data = (
+        filtered.groupby(['DealerID','Country'])
+        .agg(Rate=('is_delinquent','mean'))
+        .reset_index()
+    )
+
+    dealer_data['Rate'] = dealer_data['Rate'] * 100
+
+    # Plot
+    fig_dealer = px.bar(
+        dealer_data,
+        x='DealerID',
+        y='Rate',
+        color='Country',
+        title='Dealer-Level Delinquency Rate'
+    )
+
     st.plotly_chart(fig_dealer, use_container_width=True)
+
 
 # Seasonal Tab
 with tabs[4]:

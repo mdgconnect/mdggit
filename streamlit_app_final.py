@@ -174,7 +174,7 @@ with tabs[4]:
     seasonal = (
         filtered
         .groupby([filtered['Event'].dt.month_name().rename("Event"), 'Country'])
-        .agg(Rate_Percentage=('is_delinquent', 'mean'))
+        .agg(Rate Percentage=('is_delinquent', 'mean'))
         .reset_index()
     )
 
@@ -183,7 +183,7 @@ with tabs[4]:
     fig_seasonal = px.bar(
         seasonal,
         x='Event',
-        y='Rate_Percentage',
+        y='Rate Percentage',
         color='Country',
         title='Seasonal Trend'
     )

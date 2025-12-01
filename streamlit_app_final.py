@@ -294,7 +294,7 @@ with tabs[5]:
     top_n = st.slider("Select Top N Models", min_value=5, max_value=20, value=10)
     st.caption(f"Applied conversion: 1 EUR = {conversion_rate:.2f} {conversion_option}")
 
-    model_fuel_rev = filtered.groupby(['FuelType','modeldescription']).agg(revenue=('revenue_amount','sum'), contracts=('contractnumber','count'), avg_rev_contract=('revenue_amount','mean')).reset_index()
+    model_fuel_rev = filtered.groupby(['fueltypecode','modeldescription']).agg(revenue=('revenue_amount','sum'), contracts=('contractnumber','count'), avg_rev_contract=('revenue_amount','mean')).reset_index()
     top_by_fuel = model_fuel_rev.sort_values(['FuelType','revenue'], ascending=[True, False]).groupby('FuelType').head(top_n)
     fig_top_by_fuel = px.bar(top_by_fuel, x='modeldescription', y='revenue', color='FuelType', title=f'Top {top_n} Models by Revenue within Each Fuel Type')
     fig_top_by_fuel.update_xaxes(tickangle=45)

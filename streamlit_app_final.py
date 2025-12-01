@@ -174,7 +174,7 @@ with tabs[4]:
     seasonal = (
         filtered
         .groupby([filtered['Event'].dt.month_name().rename("Event"), 'Country'])
-        .agg(Rate Percentage=('is_delinquent', 'mean'))
+        .agg(Rate Percentage=('is_delinquent': 'mean'))
         .reset_index()
         .rename(columns={'is_delinquent': 'Rate Percentage'})
     )

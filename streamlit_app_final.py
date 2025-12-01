@@ -258,7 +258,7 @@ with tabs[4]:
 
     # Fuel type comparison
     st.markdown("### Fuel Type Comparison")
-    fuel_comp = filtered.groupby('FuelType').agg(Turnover=('revenue_amount','sum'), avg_rev_contract=('revenue_amount','mean'), contracts=('contractnumber','count')).reset_index()
+    fuel_comp = filtered.groupby('fueltypecode').agg(Turnover=('revenue_amount','sum'), avg_rev_contract=('revenue_amount','mean'), contracts=('contractnumber','count')).reset_index()
     fuel_comp['Turnover'] *= 1
     fuel_comp['avg_rev_contract'] *= 1
     fig_fuel_comp = px.bar(fuel_comp, x='FuelType', y='Turnover', color='FuelType', title='Total Revenue by Fuel Type')

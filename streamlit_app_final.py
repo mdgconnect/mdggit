@@ -66,7 +66,7 @@ date_range = st.sidebar.date_input("Date Range", value=(all_df['Event'].min().da
 
 # Advanced filters
 model_filter = st.sidebar.multiselect("Vehicle Model", options=sorted(all_df['modeldescription'].dropna().unique()), default=[], key="model_filter")
-fuel_filter = st.sidebar.multiselect("Fuel Type", options=sorted(all_df['fueltypecode'].dropna().unique()), default=[], key="fuel_filter")
+fuel_filter = st.sidebar.multiselect("Fuel Type", options=sorted(all_df['FuelType'].dropna().unique()), default=[], key="fuel_filter")
 model_search = st.sidebar.text_input("Search Model", value="", key="model_search")
 
 # Global revenue basis
@@ -106,7 +106,7 @@ if cust_filter:
 if model_filter:
     filtered = filtered[filtered['modeldescription'].isin(model_filter)]
 if fuel_filter:
-    filtered = filtered[filtered['fueltypecode'].isin(fuel_filter)]
+    filtered = filtered[filtered['FuelType'].isin(fuel_filter)]
 if model_search:
     filtered = filtered[filtered['modeldescription'].str.contains(model_search.strip(), case=False, na=False)]
 
@@ -233,13 +233,13 @@ with tabs[4]:
     st.markdown("### Revenue Trend by Fuel Type (Monthly)")
     if 'Month' not in filtered.columns:
         filtered['Month'] = pd.to_datetime(filtered['month']+'-01')
-    fuel_time = filtered.groupby(['Month','fueltypecode']).agg(Turnover=('revenue_amount','sum')).reset_index()
+    fuel_time = filtered.groupby(['Month','FuelType']).agg(Turnover=('revenue_amount','sum')).reset_index()
     fuel_time['Turnover'] *= 1
     view_mode = st.radio("Fuel Trend View", ["Multi-line","Stacked area"], index=0, horizontal=True, key="fuel_trend_view")
     if view_mode == "Multi-line":
-        fig_fuel_time = px.line(fuel_time, x='Month', y='Turnover', color='fueltypecode', markers=True, title='Monthly Revenue by Fuel Type')
+        fig_fuel_time = px.line(fuel_time, x='Month', y='Turnover', color='FuelType', markers=True, title='Monthly Revenue by Fuel Type')
     else:
-        fig_fuel_time = px.area(fuel_time, x='Month', y='Turnover', color='fueltypecode', title='Monthly Revenue by Fuel Type (Stacked)')
+        fig_fuel_time = px.area(fuel_time, x='Month', y='Turnover', color='FuelType', title='Monthly Revenue by Fuel Type (Stacked)')
     fig_fuel_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_time, use_container_width=True)
@@ -254,15 +254,15 @@ with tabs[4]:
 
     # Fuel type comparison
     st.markdown("### Fuel Type Comparison")
-    fuel_comp = filtered.groupby('fueltypecode').agg(Turnover=('revenue_amount','sum'), avg_rev_contract=('revenue_amount','mean'), contracts=('contractnumber','count')).reset_index()
+    fuel_comp = filtered.groupby('FuelType').agg(Turnover=('revenue_amount','sum'), avg_rev_contract=('revenue_amount','mean'), contracts=('contractnumber','count')).reset_index()
     fuel_comp['Turnover'] *= 1
     fuel_comp['avg_rev_contract'] *= 1
-    fig_fuel_comp = px.bar(fuel_comp, x='fueltypecode', y='Turnover', color='fueltypecode', title='Total Revenue by Fuel Type')
+    fig_fuel_comp = px.bar(fuel_comp, x='FuelType', y='Turnover', color='FuelType', title='Total Revenue by Fuel Type')
     fig_fuel_comp.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_comp.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_comp, use_container_width=True)
 
-    fig_fuel_avg = px.bar(fuel_comp, x='fueltypecode', y='avg_rev_contract', color='fueltypecode', title='Average Revenue per Contract by Fuel Type')
+    fig_fuel_avg = px.bar(fuel_comp, x='FuelType', y='avg_rev_contract', color='FuelType', title='Average Revenue per Contract by Fuel Type')
     fig_fuel_avg.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_avg.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_avg, use_container_width=True)
@@ -290,13 +290,13 @@ with tabs[5]:
     top_n = st.slider("Select Top N Models", min_value=5, max_value=20, value=10)
     st.caption(f"Applied conversion: 1 EUR = {conversion_rate:.2f} {conversion_option}")
 
-    model_fuel_rev = filtered.groupby(['fueltypecode','modeldescription']).agg(revenue=('revenue_amount','sum'), contracts=('contractnumber','count'), avg_rev_contract=('revenue_amount','mean')).reset_index()
-    top_by_fuel = model_fuel_rev.sort_values(['fueltypecode','revenue'], ascending=[True, False]).groupby('fueltypecode').head(top_n)
-    fig_top_by_fuel = px.bar(top_by_fuel, x='modeldescription', y='revenue', color='fueltypecode', title=f'Top {top_n} Models by Revenue within Each Fuel Type')
+    model_fuel_rev = filtered.groupby(['FuelType','modeldescription']).agg(revenue=('revenue_amount','sum'), contracts=('contractnumber','count'), avg_rev_contract=('revenue_amount','mean')).reset_index()
+    top_by_fuel = model_fuel_rev.sort_values(['FuelType','revenue'], ascending=[True, False]).groupby('FuelType').head(top_n)
+    fig_top_by_fuel = px.bar(top_by_fuel, x='modeldescription', y='revenue', color='FuelType', title=f'Top {top_n} Models by Revenue within Each Fuel Type')
     fig_top_by_fuel.update_xaxes(tickangle=45)
     fig_top_by_fuel.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_top_by_fuel.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_top_by_fuel, use_container_width=True)
 
     st.download_button(label="Download Model-Fuel Revenue CSV", data=model_fuel_rev.to_csv(index=False), file_name="model_fuel_revenue.csv", mime="text/csv")
-    st.dataframe(model_fuel_rev.sort_values(['fueltypecode','revenue'], ascending=[True, False]))
+    st.dataframe(model_fuel_rev.sort_values(['FuelType','revenue'], ascending=[True, False]))

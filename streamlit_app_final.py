@@ -159,39 +159,6 @@ with tabs[2]:
     fig_q4q1.update_layout(title='Fiscal Q4 vs Q1 Comparison')
     st.plotly_chart(fig_q4q1, use_container_width=True)
 
-# Dealer Analysis Tab
-with tabs[3]:
-
-    # 1️⃣ Normalize column names FIRST
-    filtered.columns = filtered.columns.str.lower()
-
-    # 2️⃣ Rename dealerbpid → dealerid
-    filtered = filtered.rename(columns={'DealerID': 'dealerid'})
-
-    st.write("Filtered columns:", filtered.columns.tolist())
-    st.subheader("Dealer-Level Analysis")
-
-    # 3️⃣ Now group using the renamed column
-    dealer_data = (
-        filtered.groupby(['dealerid', 'country'])
-                .agg(Rate=('is_delinquent', 'mean'))
-                .reset_index()
-    )
-
-    # 4️⃣ Convert to percentage
-    dealer_data['Rate'] = dealer_data['Rate'] * 100
-
-    # 5️⃣ Plot
-    fig_dealer = px.bar(
-        dealer_data,
-        x='dealerid',
-        y='Rate',
-        color='country',
-        title='Dealer-Level Delinquency Rate'
-    )
-
-    st.plotly_chart(fig_dealer, use_container_width=True)
-
 
 # Seasonal Tab
 with tabs[4]:

@@ -295,7 +295,7 @@ with tabs[5]:
     st.caption(f"Applied conversion: 1 EUR = {conversion_rate:.2f} {conversion_option}")
 
     model_fuel_rev = filtered.groupby(['fueltypecode','modeldescription']).agg(revenue=('revenue_amount','sum'), contracts=('contractnumber','count'), avg_rev_contract=('revenue_amount','mean')).reset_index()
-    top_by_fuel = model_fuel_rev.sort_values(['FuelType','revenue'], ascending=[True, False]).groupby('FuelType').head(top_n)
+    top_by_fuel = model_fuel_rev.sort_values(['fueltypecode','revenue'], ascending=[True, False]).groupby('fueltypecode').head(top_n)
     fig_top_by_fuel = px.bar(top_by_fuel, x='modeldescription', y='revenue', color='FuelType', title=f'Top {top_n} Models by Revenue within Each Fuel Type')
     fig_top_by_fuel.update_xaxes(tickangle=45)
     fig_top_by_fuel.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))

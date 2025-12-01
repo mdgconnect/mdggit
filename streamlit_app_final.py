@@ -88,7 +88,7 @@ reset_filters = st.sidebar.button("Reset Filters")
 reset_conversion = st.sidebar.button("Reset Conversion")
 
 if reset_filters:
-    for k in ['selected_countries','Dealer_filter','cust_filter','model_filter','fuel_filter','model_search','date_range','rev_basis','conversion_option','currency_symbol','fuel_trend_view']:
+    for k in ['selected_countries','dealer_filter','cust_filter','model_filter','fuel_filter','model_search','date_range','rev_basis','conversion_option','currency_symbol','fuel_trend_view']:
         if k in st.session_state:
             del st.session_state[k]
     st.rerun()
@@ -162,10 +162,10 @@ with tabs[2]:
 # Dealer Analysis Tab
 with tabs[3]:
     st.subheader("Dealer-Level Analysis")
-    Dealer_data = filtered.groupby(['DealerID','Country']).agg(rate=('is_delinquent','mean')).reset_index()
+    dealer_data = filtered.groupby(['dealerbpid','Country']).agg(rate=('is_delinquent','mean')).reset_index()
     dealer_data['rate'] = dealer_data['rate']*100
-    fig_Dealer = px.bar(Dealer_data, x='DealerID', y='rate', color='Country', title='Dealer-Level Delinquency Rate')
-    st.plotly_chart(fig_Dealer, use_container_width=True)
+    fig_gealer = px.bar(dealer_data, x='DealerID', y='rate', color='Country', title='Dealer-Level Delinquency Rate')
+    st.plotly_chart(fig_dealer, use_container_width=True)
 
 # Seasonal Tab
 with tabs[4]:

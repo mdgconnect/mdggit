@@ -241,9 +241,9 @@ with tabs[4]:
     fuel_time['Turnover'] *= 1
     view_mode = st.radio("Fuel Trend View", ["Multi-line","Stacked area"], index=0, horizontal=True, key="fuel_trend_view")
     if view_mode == "Multi-line":
-        fig_fuel_time = px.line(fuel_time, x='Month', y='Turnover', color='FuelType', markers=True, title='Monthly Revenue by Fuel Type')
+        fig_fuel_time = px.line(fuel_time, x='Month', y='Turnover', color='fueltypecode', markers=True, title='Monthly Revenue by Fuel Type')
     else:
-        fig_fuel_time = px.area(fuel_time, x='Month', y='Turnover', color='FuelType', title='Monthly Revenue by Fuel Type (Stacked)')
+        fig_fuel_time = px.area(fuel_time, x='Month', y='Turnover', color='fueltypecode', title='Monthly Revenue by Fuel Type (Stacked)')
     fig_fuel_time.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_fuel_time.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_time, use_container_width=True)

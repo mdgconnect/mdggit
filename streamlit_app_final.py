@@ -263,6 +263,8 @@ with tabs[4]:
     fuel_comp['avg_rev_contract'] *= 1
     fig_fuel_comp = px.bar(fuel_comp, x='fueltypecode', y='Turnover', color='fueltypecode', title='Total Revenue by Fuel Type')
     fig_fuel_comp.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
+    # X-axis label
+    fig_fuel_comp.update_xaxes(title_text="Fuel Type")
     fig_fuel_comp.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_comp, use_container_width=True)
 

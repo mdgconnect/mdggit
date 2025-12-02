@@ -110,7 +110,7 @@ if cust_filter:
 if model_filter:
     filtered = filtered[filtered['modeldescription'].isin(model_filter)]
 if fuel_filter:
-    filtered = filtered[filtered['FuelType'].isin(fuel_filter)]
+    filtered = filtered[filtered['fueltypecode'].isin(fuel_filter)]
 if model_search:
     filtered = filtered[filtered['modeldescription'].str.contains(model_search.strip(), case=False, na=False)]
 

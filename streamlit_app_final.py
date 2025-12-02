@@ -266,7 +266,7 @@ with tabs[4]:
     fig_fuel_comp.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
 	
 	# X-axis label
-	fig_fuel_avg.update_xaxes(title_text="Fuel Type")
+	fig_fuel_comp.update_xaxes(title_text="Fuel Type")
 	
     st.plotly_chart(fig_fuel_comp, use_container_width=True)
 

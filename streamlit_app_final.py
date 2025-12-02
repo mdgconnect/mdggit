@@ -318,4 +318,4 @@ with tabs[5]:
     st.plotly_chart(fig_top_by_fuel, use_container_width=True)
 
     st.download_button(label="Download Model-Fuel Revenue CSV", data=model_fuel_rev.to_csv(index=False), file_name="model_fuel_revenue.csv", mime="text/csv")
-    st.dataframe(model_fuel_rev.sort_values(['fueltypecode','revenue'], ascending=[True, False]))
+    st.dataframe(model_fuel_rev.sort_values(['fueltypecode','revenue'], ascending=[True, False])) 

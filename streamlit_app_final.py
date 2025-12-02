@@ -116,7 +116,7 @@ if model_search:
 
 # Tabs
 # -----------------------------
-tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Seasonal","Financial Revenue Analysis","Car Model Analysis"])
+tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Dealer Analysis","Seasonal","Financial Revenue Analysis","Car Model Analysis"])
 # Multi-Country Trends
 with tabs[0]:
     st.subheader("Monthly Delinquency Rate by Country")
@@ -163,9 +163,16 @@ with tabs[2]:
     fig_q4q1.update_layout(title='Fiscal Q4 vs Q1 Comparison')
     st.plotly_chart(fig_q4q1, use_container_width=True)
 
+# Dealer Analysis Tab
+with tabs[3]:
+    st.subheader("Dealer-Level Analysis")
+    dealer_data = filtered.groupby(['dealerbpid','country']).agg(rate=('is_delinquent','mean')).reset_index()
+    dealer_data['rate'] = dealer_data['rate']*100
+    fig_dealer = px.bar(dealer_data, x='dealerbpid', y='rate', color='country', title='Dealer-Level Delinquency Rate')
+    st.plotly_chart(fig_dealer, use_container_width=True)
 
 # Seasonal Tab
-with tabs[3]:
+with tabs[4]:
     st.subheader("Seasonal Trend by Month")
 
     seasonal = (
@@ -192,7 +199,7 @@ with tabs[3]:
 # -----------------------------
 # Financial Revenue Analysis Tab
 # -----------------------------
-with tabs[4]:
+with tabs[5]:
     st.subheader("Financial Revenue Analysis")
     basis_option = st.session_state.get("rev_basis", "Capital+Interest+Fees+Other")
     if basis_option == "Capital Only":
@@ -295,7 +302,7 @@ st.plotly_chart(fig_fuel_avg, use_container_width=True)
 # -----------------------------
 # Car Model Analysis Tab
 # -----------------------------
-with tabs[5]:
+with tabs[6]:
     st.subheader("Car Model Analysis by Fuel Type")
     basis_option = st.session_state.get("rev_basis", "Capital+Interest+Fees+Other")
     if basis_option == "Capital Only":

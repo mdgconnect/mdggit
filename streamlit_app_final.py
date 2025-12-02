@@ -278,6 +278,9 @@ fig_fuel_avg.update_traces(
     hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}')
 )
 
+# X-axis label
+fig_fuel_avg.update_xaxes(title_text="Fuel Type")
+
 # Change Y-axis label here
 fig_fuel_avg.update_yaxes(
     title_text="Average Rev Contract",   # ✔ NEW LABEL

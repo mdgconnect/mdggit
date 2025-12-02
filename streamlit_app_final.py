@@ -319,6 +319,12 @@ with tabs[5]:
     fig_top_by_fuel.update_xaxes(tickangle=45)
     fig_top_by_fuel.update_traces(hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}'))
     fig_top_by_fuel.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
+
+    # X-axis label
+    fig_top_by_fuel.update_xaxes(title_text="Car Model")
+
+    # Y-axis label
+    fig_top_by_fuel.update_yaxes(title_text="Revenue")
     st.plotly_chart(fig_top_by_fuel, use_container_width=True)
 
     st.download_button(label="Download Model-Fuel Revenue CSV", data=model_fuel_rev.to_csv(index=False), file_name="model_fuel_revenue.csv", mime="text/csv")

@@ -197,28 +197,28 @@ with tabs[0]:
     fig_fuel_comp.update_yaxes(tickprefix=currency_symbol, tickformat=',.2f')
     st.plotly_chart(fig_fuel_comp, use_container_width=True)
 
-fig_fuel_avg = px.bar(
-    fuel_comp,
-    x='fueltypecode',
-    y='avg_rev_contract',
-    color='fueltypecode',
-    title='Average Revenue per Contract by Fuel Type'
-)
-
-fig_fuel_avg.update_traces(
-    hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}')
-)
-# X-axis label
-fig_fuel_avg.update_xaxes(title_text="Fuel Type")
-
-# Change Y-axis label here
-fig_fuel_avg.update_yaxes(
-    title_text="Average Rev Contract",   # ✔ NEW LABEL
-    tickprefix=currency_symbol,
-    tickformat=',.2f'
-)
-
-st.plotly_chart(fig_fuel_avg, use_container_width=True)
+    #Average Revenue Per Contract Fuel Type
+    fig_fuel_avg = px.bar(
+        fuel_comp,
+        x='fueltypecode',
+        y='avg_rev_contract',
+        color='fueltypecode',
+        title='Average Revenue per Contract by Fuel Type'
+    )
+    
+    fig_fuel_avg.update_traces(
+        hovertemplate=(('' if currency_symbol == 'None' else currency_symbol) + ' %{y:,.2f}')
+    )
+    # X-axis label
+    fig_fuel_avg.update_xaxes(title_text="Fuel Type")
+    
+    # Change Y-axis label here
+    fig_fuel_avg.update_yaxes(
+        title_text="Average Rev Contract",   # ✔ NEW LABEL
+        tickprefix=currency_symbol,
+        tickformat=',.2f'
+    )    
+    st.plotly_chart(fig_fuel_avg, use_container_width=True)
 
 
 # -----------------------------

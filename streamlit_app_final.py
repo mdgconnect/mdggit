@@ -116,7 +116,7 @@ if model_search:
 
 # Tabs
 # -----------------------------
-tabs = st.tabs(["Multi-Country Trends","Variance","Fiscal Analysis","Seasonal","Financial Revenue Analysis","Car Model Analysis"])
+tabs = st.tabs(["Multi-Country Trends","Seasonal","Financial Revenue Analysis","Car Model Analysis"])
 # Multi-Country Trends
 with tabs[0]:
     st.subheader("Monthly Delinquency Rate by Country")
@@ -133,38 +133,8 @@ with tabs[0]:
     fig_quarter = px.line(quarterly, x='Quarter', y='Rate Percentage', color='Country', markers=True, title='Quarterly Delinquency Rate')
     st.plotly_chart(fig_quarter, use_container_width=True)
 
-# Variance Tab
-with tabs[1]:
-    st.subheader("MoM Variance")
-    if not monthly.empty:
-        monthly_sorted = monthly.sort_values(['Country','Month'])
-        monthly_sorted['MoM Variance'] = monthly_sorted.groupby('Country')['Rate Percentage'].pct_change()*100
-        fig_mom = px.bar(monthly_sorted, x='Month', y='MoM Variance', color='Country', title='MoM Variance (%)')
-        st.plotly_chart(fig_mom, use_container_width=True)
-
-    st.subheader("QoQ Variance")
-    if not quarterly.empty:
-        quarterly_sorted = quarterly.sort_values(['Country','Quarter'])
-        quarterly_sorted['QoQ Variance'] = quarterly_sorted.groupby('Country')['Rate Percentage'].pct_change()*100
-        fig_qoq = px.bar(quarterly_sorted, x='Quarter', y='QoQ Variance', color='Country', title='QoQ Variance (%)')
-        st.plotly_chart(fig_qoq, use_container_width=True)
-
-# Fiscal Analysis Tab
-with tabs[2]:
-    st.subheader("Fiscal Q4 vs Q1 Comparison")
-    q4q1 = filtered[filtered['q_num'].isin([1,4])].groupby(['Country','year','q_num']).agg(rate=('is_delinquent','mean')).reset_index()
-    q4q1['rate'] = q4q1['rate']*100
-    pivot_q4q1 = q4q1.pivot_table(index=['Country','year'], columns='q_num', values='rate').reset_index()
-    fig_q4q1 = go.Figure()
-    for Country in selected_countries:
-        d = pivot_q4q1[pivot_q4q1['Country']==Country]
-        fig_q4q1.add_trace(go.Scatter(x=d['year'], y=d.get(4,[]), mode='lines+markers', name=f'{Country} Q4'))
-        fig_q4q1.add_trace(go.Scatter(x=d['year'], y=d.get(1,[]), mode='lines+markers', name=f'{Country} Q1'))
-    fig_q4q1.update_layout(title='Fiscal Q4 vs Q1 Comparison')
-    st.plotly_chart(fig_q4q1, use_container_width=True)
-
 # Seasonal Tab
-with tabs[3]:
+with tabs[1]:
     st.subheader("Seasonal Trend by Month")
 
     seasonal = (
@@ -191,7 +161,7 @@ with tabs[3]:
 # -----------------------------
 # Financial Revenue Analysis Tab
 # -----------------------------
-with tabs[4]:
+with tabs[2]:
     st.subheader("Financial Revenue Analysis")
     basis_option = st.session_state.get("rev_basis", "Capital+Interest+Fees+Other")
     if basis_option == "Capital Only":
@@ -294,7 +264,7 @@ st.plotly_chart(fig_fuel_avg, use_container_width=True)
 # -----------------------------
 # Car Model Analysis Tab
 # -----------------------------
-with tabs[5]:
+with tabs[3]:
     st.subheader("Car Model Analysis by Fuel Type")
     basis_option = st.session_state.get("rev_basis", "Capital+Interest+Fees+Other")
     if basis_option == "Capital Only":

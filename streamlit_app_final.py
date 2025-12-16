@@ -116,52 +116,12 @@ if model_search:
 
 # Tabs
 # -----------------------------
-tabs = st.tabs(["Multi-Country Trends","Seasonal","Financial Revenue Analysis","Car Model Analysis"])
-# Multi-Country Trends
-with tabs[0]:
-    st.subheader("Monthly Delinquency Rate by Country")
-    monthly = filtered.groupby(['Country','month']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
-    monthly['Rate Percentage'] = (monthly['delinq']/monthly['total']*100).round(2)
-    monthly['Month'] = pd.to_datetime(monthly['month']+'-01')
-    fig_month = px.line(monthly, x='Month', y='Rate Percentage', color='Country', markers=True, title='Monthly Delinquency Rate')
-    st.plotly_chart(fig_month, use_container_width=True)
-
-    st.subheader("Quarterly Delinquency Rate by Country")
-    quarterly = filtered.groupby(['Country','quarter']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
-    quarterly['Rate Percentage'] = (quarterly['delinq']/quarterly['total']*100).round(2)
-    quarterly['Quarter'] = pd.PeriodIndex(quarterly['quarter'], freq='Q').to_timestamp()
-    fig_quarter = px.line(quarterly, x='Quarter', y='Rate Percentage', color='Country', markers=True, title='Quarterly Delinquency Rate')
-    st.plotly_chart(fig_quarter, use_container_width=True)
-
-# Seasonal Tab
-with tabs[1]:
-    st.subheader("Seasonal Trend by Month")
-
-    seasonal = (
-        filtered
-        .groupby([filtered['Event'].dt.month_name().rename("Event"), 'Country'])
-        .agg({'is_delinquent': 'mean'})
-        .reset_index()
-        .rename(columns={'is_delinquent': 'Rate Percentage'})
-    )
-
-    seasonal['Rate Percentage'] *= 100
-
-    fig_seasonal = px.bar(
-        seasonal,
-        x='Event',
-        y='Rate Percentage',
-        color='Country',
-        title='Seasonal Trend'
-    )
-
-    st.plotly_chart(fig_seasonal, use_container_width=True)
-
+tabs = st.tabs(["Financial Revenue Analysis","Car Model Analysis","Multi-Country Trends","Seasonal"])
 
 # -----------------------------
 # Financial Revenue Analysis Tab
 # -----------------------------
-with tabs[2]:
+with tabs[0]:
     st.subheader("Financial Revenue Analysis")
     basis_option = st.session_state.get("rev_basis", "Capital+Interest+Fees+Other")
     if basis_option == "Capital Only":
@@ -264,7 +224,7 @@ st.plotly_chart(fig_fuel_avg, use_container_width=True)
 # -----------------------------
 # Car Model Analysis Tab
 # -----------------------------
-with tabs[3]:
+with tabs[1]:
     st.subheader("Car Model Analysis by Fuel Type")
     basis_option = st.session_state.get("rev_basis", "Capital+Interest+Fees+Other")
     if basis_option == "Capital Only":
@@ -298,3 +258,43 @@ with tabs[3]:
 
     st.download_button(label="Download Model-Fuel Revenue CSV", data=model_fuel_rev.to_csv(index=False), file_name="model_fuel_revenue.csv", mime="text/csv")
     st.dataframe(model_fuel_rev.sort_values(['fueltypecode','revenue'], ascending=[True, False]))
+    
+# Multi-Country Trends
+with tabs[2]:
+    st.subheader("Monthly Delinquency Rate by Country")
+    monthly = filtered.groupby(['Country','month']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
+    monthly['Rate Percentage'] = (monthly['delinq']/monthly['total']*100).round(2)
+    monthly['Month'] = pd.to_datetime(monthly['month']+'-01')
+    fig_month = px.line(monthly, x='Month', y='Rate Percentage', color='Country', markers=True, title='Monthly Delinquency Rate')
+    st.plotly_chart(fig_month, use_container_width=True)
+
+    st.subheader("Quarterly Delinquency Rate by Country")
+    quarterly = filtered.groupby(['Country','quarter']).agg(total=('contractnumber','count'),delinq=('is_delinquent','sum')).reset_index()
+    quarterly['Rate Percentage'] = (quarterly['delinq']/quarterly['total']*100).round(2)
+    quarterly['Quarter'] = pd.PeriodIndex(quarterly['quarter'], freq='Q').to_timestamp()
+    fig_quarter = px.line(quarterly, x='Quarter', y='Rate Percentage', color='Country', markers=True, title='Quarterly Delinquency Rate')
+    st.plotly_chart(fig_quarter, use_container_width=True)
+
+# Seasonal Tab
+with tabs[3]:
+    st.subheader("Seasonal Trend by Month")
+
+    seasonal = (
+        filtered
+        .groupby([filtered['Event'].dt.month_name().rename("Event"), 'Country'])
+        .agg({'is_delinquent': 'mean'})
+        .reset_index()
+        .rename(columns={'is_delinquent': 'Rate Percentage'})
+    )
+
+    seasonal['Rate Percentage'] *= 100
+
+    fig_seasonal = px.bar(
+        seasonal,
+        x='Event',
+        y='Rate Percentage',
+        color='Country',
+        title='Seasonal Trend'
+    )
+
+    st.plotly_chart(fig_seasonal, use_container_width=True)
